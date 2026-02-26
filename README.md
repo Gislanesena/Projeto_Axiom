@@ -1,2 +1,2 @@
 # Projeto_Axiom
-Site voltado ao corpo estudantil
+Site informativo voltado a estudantes e universitários
