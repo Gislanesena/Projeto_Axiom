@@ -1,0 +1,88 @@
+body {
+    background-color: #1d1c1c;
+    font-size: 22px;
+    margin: 40px 50px;
+    background-image: url(Imagens/fundo4.svg);
+    background-repeat: no-repeat;
+    
+
+}
+
+
+ .img-logo {
+    transform: translateY(-20px);
+    width: 400px;
+    margin-right: 10px;
+    margin-bottom: -110px;
+}
+
+.menu {
+    text-align: right;
+}
+.menu li {
+    list-style-type: none;
+    display: inline-block;
+}
+
+.menu a {
+   background-color: #ccc;
+   padding: 15px;
+   color:#040938a1
+   cursor: pointer;
+    display: inline-block;
+    text-decoration: none;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu a:hover {
+    background-color: #160c5ea1;
+    color: #f2f1f5;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+h1 {
+    color: rgb(251, 246, 246);
+}
+
+ul {
+    color: #FFFFFF;
+}
+
+h2{
+    color: #FFFFFF;
+    text-align: center;
+}
+
+h3 {
+    color:#FFFFFF;
+}
+
+h4{
+    color: #FFFFFF;
+    text-align: center;
+     background-color: #ccc;
+    width: 600px;
+    margin-left: 200px;
+    padding: 2px 20px;
+    color: #f02e2e;
+    text-decoration: none;
+}
+
+p {
+    color: #FFFFFF;
+}
+
+hr {
+    color: #FFFFFF;
+}
+.forms {
+    background-color: #ccc;
+    text-align: center;
+    width: 250px;
+    margin-left: 600px;
+    padding: 2px 20px;
+    color: #000000;
+    text-decoration: none;
+}
