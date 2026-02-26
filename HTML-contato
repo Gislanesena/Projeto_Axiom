@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <title>AxiomCode</title>
+        <meta charset="utf-8">
+        <meta name="description" content="Suporto e apoio a estudantes em todos os semestres da faculdade">
+        <meta name="author" content="Gislane Sena">
+
+        <link   rel="stylesheet" href="mood.css">
+    </head>
+    
+    <img src="Imagens/AXIOMretrato.svg" class="img-logo" alt="Logotipo AxiomCode">
+    <body>
+
+        <ul class="menu">
+            <li> <a href="homepage.html"> Home</a></li>
+            <li> <a href="blog.html"> Blog</a></li>
+            <li> <a href="contato.html"> Contato</a></li>
+        </ul>
+
+    <hr>
+ <h1> Veja as últimas atualizações</h1>
+
+ <p> Nosso blog tem o intuito de trazer conteúdo de tecnologia com linguagem natural e didática, focada para estudantes da área. Contamos com atualizações de eventos da comunidade tech e aprendizado de disciplinas.</p>
+
+
+    </body>
+    </html>
