@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <title>AxiomCode</title>
+        <meta charset="utf-8">
+        <meta name="description" content="Suporto e apoio a estudantes em todos os semestres da faculdade">
+        <meta name="author" content="Gislane Sena">
+
+        <link   rel="stylesheet" href="mood.css">
+    </head>
+    
+    <img src="Imagens/AXIOMretrato.svg" class="img-logo" alt="Logotipo AxiomCode">
+    <body>
+
+        <ul class="menu">
+            <li> <a href="homepage.html"> Home</a></li>
+            <li> <a href="blog.html"> Blog</a></li>
+            <li> <a href="contato.html"> Contato</a></li>
+        </ul>
+
+    <hr>
+
+    
+<h1> Bem-Vindo ao Axiom Code! </h1> <!--Título Principal do Site-->
+
+<p> Somos uma plataforma digital com propósito de integrar <strong>Comunidades Universitárias</strong>, na inteção de auxiliar e simplificar uma das fases mais importantes da vida: O curso superior.</p>
+
+<p> Na lógica, um axioma é o ponto de partida. Na Universidade, o começo pode parecer tudo, menos lógico. É um mar de sintaxes novas, cálculos complexos e a dúvida constante: 'será que isso é para mim?' 
+</p>
+ <hr>
+<p> O Axiom Code nasceu para ser a sua constante. Nós não somos apenas uma comunidade de código; somos a fundação.
+</p>
+
+<ul>
+    <li> Não ignoramos o básico: Todo sistema complexo começa com uma linha simples.</li>
+    <li> Construímos em conjunto: Nenhum algoritmo sobrevive sozinho: o conhecimento é colaborativo.</li>
+</ul>
+
+<h2> Pesquisa Sobre Desafios Estudantis </h2>
+<p> Compartilhe conosco sua experiência respondendo o formulário e ajude a criar métricas sobre como os desafios interferem na conclusão do curso superior.
+    <br>
+    Sua participação é fundamental para entendermos melhor a realidade dos estudantes universitários e desenvolvermos uma solução que realmente faça a diferença.
+</p>
+<p class="forms"><a href="#"> Clique para Responder </a></p>
+
+<h3>Impacto Coletivo</h3>
+<p> Suas respostas ajudam toda a comunidade universitaria.</p>
+
+<h3>Dados Relevantes</h3>
+<p> Geramos métricas importantes sobre a vida acadêmica.</p>
+
+<h3>Anônimo e Seguro</h3>
+<p> Suas informações são confidenciais e protegidas.</p>
+
+<h4> <a href="blog.html">Acesse nosso Blog e acompanhe novidades, inspirações e soluções estudantis. </a></h4>
+
+</body>
+
+</html>
