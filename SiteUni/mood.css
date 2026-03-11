@@ -79,3 +79,22 @@ h1{
 p{
     color: #ccc;
 }
+
+ .slides{
+    position: relative;
+    display: flex;
+    transition: transform 0.5s ease;
+}
+
+.slides::after{
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+        circle at var(--x) var(--y),
+        rgba(255,255,255,0.65),
+        transparent 40%
+    );
+    transition: opacity 0.2s;
+}
