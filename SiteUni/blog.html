@@ -2,40 +2,107 @@
 <html lang="pt-br">
 
 <head>
-    <title>AxiomCode</title>
+    <title>Blog | AxiomCode</title>
     <meta charset="utf-8">
-    <meta name="description" content="Suporto e apoio a estudantes em todos os semestres da faculdade">
+    <meta name="description" content="Conteúdos e atualizações da comunidade AxiomCode">
     <meta name="author" content="Gislane Sena">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="/SiteUni/css/style.css">
+    <link rel="stylesheet" href="/SiteUni/css/base.css">
+    <link rel="stylesheet" href="/SiteUni/css/layout.css">
+    <link rel="stylesheet" href="/SiteUni/css/blog.css">
 </head>
 
-
 <body>
-    <div class=" wrapperContainer-blue wrapperContainer-fixed" style="margin-top: -20px;">
+
+    <!-- Acessibilidade -->
+    <a href="#conteudo" class="skip-link">Pular para o conteúdo principal</a>
+
+    <div class="wrapperContainer-blue wrapperContainer-fixed" style="margin-top: -20px;">
+
         <header class="headercontainer">
+
             <img src="Imagens/AXIOMretrato.svg" class="img-logo" alt="Logotipo AxiomCode">
-            <nav class="header_nav">
+
+            <nav class="header_nav" aria-label="Menu principal">
 
                 <ul>
-                    <li> <a href="index.html"> Home</a></li>
-                    <li> <a href="blog.html"> Blog</a></li>
-                    <li> <a href="contato.html"> Contato</a></li>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="contato.html">Contato</a></li>
                 </ul>
-            </nav>
-        </header>
-    </div>
-    <br>
-    <section class="wrapperContainer homepage">
-        <div>
-            <br>
-            <h1> Veja as últimas atualizações</h1>
 
-            <p> Nosso blog tem o intuito de trazer conteúdo de tecnologia com linguagem natural e didática, focada para
-                estudantes da área. Contamos com atualizações de eventos da comunidade tech e aprendizado de
-                disciplinas.</p>
+            </nav>
+
+        </header>
+
+    </div>
+
+    <main id="conteudo">
+
+        <section class="wrapperContainer homepage">
+
+            <div>
+
+                <h1>Veja as últimas atualizações</h1>
+
+                <p>
+                    Nosso blog tem o intuito de trazer conteúdo de tecnologia com linguagem natural
+                    e didática, focada para estudantes da área. Contamos com atualizações de eventos
+                    da comunidade tech e aprendizado de disciplinas.
+                </p>
+
+                <article>
+
+                    <h2>Como começar na área de programação</h2>
+
+                    <p>
+                        Entrar na área de tecnologia pode parecer desafiador no início.
+                        Uma boa estratégia é começar com lógica de programação, praticar
+                        exercícios e participar de comunidades que compartilham conhecimento.
+                    </p>
+
+                </article>
+
+                <article>
+
+                    <h2>Importância dos eventos acadêmicos em TI</h2>
+
+                    <p>
+                        Eventos acadêmicos como semanas de tecnologia, hackathons e palestras
+                        são oportunidades importantes para ampliar conhecimentos, conhecer
+                        profissionais da área e criar networking.
+                    </p>
+
+                </article>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+
+        <p>© 2026 AxiomCode</p>
+
+    </footer>
+
+    <script src="js/script.js"></script>
+
+    <!-- VLibras -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
         </div>
-    </section>
+    </div>
+
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
 
 </body>
 

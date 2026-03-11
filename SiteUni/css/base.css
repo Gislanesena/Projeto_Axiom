@@ -1,0 +1,69 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100%;
+    background-image: linear-gradient(#050538, #000000);
+    margin: 0;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+nav a {
+    color: inherit;
+}
+
+ul {
+    color: #f3f3f4;
+}
+
+h1 {
+    color: #FFFFFF;
+    text-align: center;
+}
+
+h2 {
+    color: #060251;
+    font-size: 30px;
+}
+
+h3 {
+    font-size: 25px;
+    margin-top: 30px;
+    color: #f2f1f5;
+}
+
+h4 {
+    text-align: center;
+    color: #f2f1f5;
+    text-decoration: none;
+}
+
+p {
+    color: #FFFFFF;
+    font-size: 20px;
+    text-align: left;
+}
+
+.p1 {
+    text-align: center;
+}
+
+hr {
+    color: #FFFFFF;
+}
+
+/* Correção de largura da página */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Garantir que o VLibras não afete o layout */
+[vw] {
+    position: fixed;
+    z-index: 9999;
+}

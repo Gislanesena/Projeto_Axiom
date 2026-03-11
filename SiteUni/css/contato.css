@@ -1,0 +1,52 @@
+.formsspace {
+    margin: 50px 100px;
+    gap: 20px;
+    text-align: center;
+}
+
+.forms {
+    background-color: #f4f4f6;
+    color: #ccc;
+    text-decoration: none;
+    padding: 10px 250px;
+    border: solid 1px #ccc;
+    flex: 1;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.btnspace {
+    margin: 50px 100px 50px 150px;
+}
+
+.btn {
+    background-color: #15044d93;
+    color: #ccc;
+    padding: 20px 25px;
+    font-size: 20px;
+    border: solid 0.5px #ccc;
+    text-decoration: none;
+    flex: 1;
+    border-radius: 10px;
+}
+
+form{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-width:500px;
+    color: #f4f4f6;
+}
+
+input, textarea{
+    padding:10px;
+    border:1px solid #ccc;
+}
+
+button{
+    padding:10px;
+    border:none;
+    background:#0c1f3f;
+    color:white;
+    cursor:pointer;
+}
