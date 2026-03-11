@@ -5,29 +5,29 @@ const elemsImagem = document.querySelectorAll(".slides img");
 
 let index = 0;
 
-elemBotãoEsquerdo.addEventListener('click', () =>{
+elemBotãoEsquerdo.addEventListener('click', () => {
     index--;
-    if (index < 0) index = elemsImagem.length -1
+    if (index < 0) index = elemsImagem.length - 1
     atualizarCarrossel();
     // console.log(index);
 })
 
-elemBotãoDireita.addEventListener('click', () =>{
+elemBotãoDireita.addEventListener('click', () => {
     incrementarIndex
     atualizarCarrossel();
- //   console.log(index);
+    //   console.log(index);
 });
 
 const incrementarIndex = () => {
     index++;
-    if (index > elemsImagem.length -1) index = 0
+    if (index > elemsImagem.length - 1) index = 0
 }
 
 const atualizarCarrossel = () => {
     elemSlides.style.transform = `translateX(-${index * 100}%)`;
 }
 
-setInterval(() =>{
+setInterval(() => {
     incrementarIndex();
     atualizarCarrossel();
 }, 4000);
