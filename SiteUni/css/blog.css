@@ -1,9 +1,65 @@
-/* Espaços extras podem ser adicionados aqui futuramente para artigos */
-
-article{
-    margin-top:30px;
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-article h2{
-    margin-bottom:10px;
+main {
+    flex: 1;
+}
+
+/* Espaços extras podem ser adicionados aqui futuramente para artigos */
+article {
+    background-color: #07074f3b;
+    border: 1px solid #e2e3ed;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+article h2 {
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+article p {
+    font-size: 18px;
+    line-height: 1.6;
+}
+.homepage {
+    padding-top: 50px;
+}
+
+.homepage div {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.homepage h1 {
+    font-size: 36px;
+    margin-bottom: 40px;
+}
+
+.homepage > div > p {
+    margin-bottom: 40px;
+    line-height: 1.6;
+    font-size: 18px;
+}
+footer {
+    background-color: rgb(2, 2, 21);
+    padding: 20px 0;
+    margin-top: 80px;
+    color: #f2f1f5;
+    font-size: 10x;
+    text-align: center;
+    width: 100%;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    padding-left: 500px;
 }

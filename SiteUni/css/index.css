@@ -1,5 +1,5 @@
 .carrossel {
-    max-width: 900px;
+    max-width: 600px;
     width: 90%;
     margin: 0 auto;
     overflow: hidden;
@@ -17,6 +17,45 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.pesquisa {
+    max-width: 900px;
+    margin: 80px auto;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.pesquisa h1{
+    margin-bottom: 20px;
+}
+
+.pesquisa p{
+    margin-top: 10px;
+    font-size: 18px;
+}
+
+.pesquisa a {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 14px 30px;
+    background-color: #0d0d6b;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    transition: 0.3s;
+}
+
+.pesquisa a:hover {
+    background-color: #1b1bb8;
+    transform: translateY(-2px);
+}
+
+.pesquisa p {
+    margin-top: 15px;
+    line-height: 1.6;
+    font-size: 18px;
 }
 
 button {
@@ -56,8 +95,13 @@ button:hover {
     right: 10px;
 }
 
-.homepage {
-    margin-top: 40px;
+.homepage{
+    margin-top:120px;
+    max-width:900px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;
+    line-height:1.7;
 }
 
 .relevante1 {
@@ -69,8 +113,9 @@ button:hover {
 
 .relevante-container {
     display: flex;
-    text-align: center;
-    gap: 5px;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
 }
 
 .card-relevante {
@@ -87,5 +132,14 @@ button:hover {
 }
 
 .cardalt {
+    text-align: center;
+}
+
+footer {
+    background-color: rgb(2,2,21);
+    padding: 30px 0;
+    margin-top: 80px;
+    color: #f2f1f5;
+    font-size: 14px;
     text-align: center;
 }

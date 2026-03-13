@@ -1,18 +1,33 @@
-.formsspace {
-    margin: 50px 100px;
-    gap: 20px;
-    text-align: center;
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.forms {
-    background-color: #f4f4f6;
-    color: #ccc;
-    text-decoration: none;
-    padding: 10px 250px;
-    border: solid 1px #ccc;
+main {
     flex: 1;
+}
+
+.formsspace {
+    max-width: 900px;
+    margin: 40px auto;
     text-align: center;
-    border-radius: 10px;
+    line-height: 1.6;
+}
+
+input, textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    width: 100%;
+    border-radius: 4px;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 500px;
+    margin: 40px auto;
+    color: #f4f4f6;
 }
 
 .btnspace {
@@ -43,10 +58,40 @@ input, textarea{
     border:1px solid #ccc;
 }
 
-button{
-    padding:10px;
-    border:none;
-    background:#0c1f3f;
-    color:white;
-    cursor:pointer;
+button {
+    padding: 12px;
+    border: none;
+    background: #0c1f3f;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+button:hover{
+    background:#1b3c72;
+}
+
+footer {
+    background-color: rgb(2, 2, 21);
+    padding: 20px 0;
+    margin-top: 80px;
+    color: #f2f1f5;
+    font-size: 10x;
+    text-align: center;
+    width: 100%;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    padding-left: 500px;
+}
+
+.contato-texto{
+    max-width: 800px;
+    margin: 0 auto 30px auto;
+    text-align: center;
+    line-height: 1.6;
 }
