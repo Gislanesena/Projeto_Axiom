@@ -1,41 +1,80 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-    <head>
-        <title>AxiomCode</title>
-        <meta charset="utf-8">
-        <meta name="description" content="Suporto e apoio a estudantes em todos os semestres da faculdade">
-        <meta name="author" content="Gislane Sena">
+<head>
+    <meta charset="utf-8">
+    <title>AxiomCode - Contato</title>
+    <meta name="description" content="Suporte e apoio a estudantes em todos os semestres da faculdade">
+    <meta name="author" content="Gislane Sena">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <div class="wrapperContainer-blue wrapperContainer-fixed" style="margin-top: -20px;">
+            <header class="headercontainer">
+                <img src="Imagens/AXIOMretrato.svg" class="img-logo" alt="Logotipo AxiomCode">
+                <nav class="header_nav">
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                        <li><a href="contato.html">Contato</a></li>
+                        <li><a href="/login">Login</a></li>
+                    </ul>
+                </nav>
+            </header>
+        </div>
+        <br>
 
-        <link   rel="stylesheet" href="style.css">
-    </head>
-    
-    
-    <body>
-            <div class=" wrapperContainer-blue wrapperContainer-fixed" style="margin-top: -20px;"> 
-        <header class="headercontainer">
-            <img src="Imagens/AXIOMretrato.svg" class="img-logo" alt="Logotipo AxiomCode">
-            <nav class="header_nav">
+        <div class="conteudo-centralizado">
+            <section class="wrapperContainer homepage">
+                <div>
+                    <h1>Entre em contato conosco!</h1>
+                    <br>
+                    <p>Envie dúvidas, soluções, reclamações e ideias para colaborar com o projeto através do formulário.</p>
+                </div>
+            </section>
 
-             <ul>
-                 <li> <a href="index.html"> Home</a></li>
-                 <li> <a href="blog.html"> Blog</a></li>
-                 <li> <a href="contato.html"> Contato</a></li>
-             </ul>
-            </nav>
-        </header>
-            </div>
-            <br>
-     <section  class="wrapperContainer homepage" ">
-            <div>
- <h1> Entre em contato conosco!</h1>
+            <div id="msg-ok" class="msg-ok" style="display: none;">Mensagem enviada com sucesso. Obrigado pelo contato!</div>
+            <div id="msg-erro" class="msg-erro" style="display: none;">Preencha todos os campos obrigatórios (nome, telefone, e-mail e mensagem).</div>
 
- <p> Envie dúvidas, soluções, reclamações e ideias para colaborar com o projeto através do formulário.</p>
-    </div>
-    </section>
- <hr>
+            <form class="form-contato" method="post" action="/contato">
+                <label class="obrigatorio">Nome</label>
+                <input type="text" name="nome" required placeholder="Seu nome completo">
 
- <p> Quer treinar linguagem de programação e linguagem de texto? Seja voluntário no projeto e coloque em prática suas ideias. Seu voluntariado pode auxiliar na entrega de resultados para a universidade.</p>
+                <label class="obrigatorio">Telefone</label>
+                <input type="text" name="telefone" required placeholder="(00) 00000-0000">
 
+                <label class="obrigatorio">E-mail</label>
+                <input type="email" name="email" required placeholder="seu@email.com">
 
-    </body>
-    </html>
+                <label>Assunto</label>
+                <input type="text" name="assunto" placeholder="Assunto da mensagem (opcional)">
+
+                <label class="obrigatorio">Mensagem</label>
+                <textarea name="mensagem" required placeholder="Escreva sua mensagem..."></textarea>
+
+                <button type="submit" class="btn-enviar">Enviar</button>
+            </form>
+
+            <p style="margin-top: 2em;">Quer treinar linguagem de programação e linguagem de texto? Seja voluntário no projeto e coloque em prática suas ideias. Seu voluntariado pode auxiliar na entrega de resultados para a universidade.</p>
+        </div>
+    </main>
+
+    <footer>
+        Copyright &copy; 2026<br>
+        Desenvolvido por SenaWeb
+    </footer>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('ok') === '1') {
+                document.getElementById('msg-ok').style.display = 'block';
+                document.getElementById('msg-erro').style.display = 'none';
+            } else if (params.get('erro') === '1') {
+                document.getElementById('msg-erro').style.display = 'block';
+                document.getElementById('msg-ok').style.display = 'none';
+            }
+        })();
+    </script>
+</body>
+</html>
