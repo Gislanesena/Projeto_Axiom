@@ -1,0 +1,39 @@
+AXIOMCODE - POR ONDE COMEÇAR
+============================
+
+1. ONDE ESTÁ O ARQUIVO DO BANCO (MySQL)?
+   Pasta: TreinamentosSite \ Backend
+   Arquivo: Schema.sql
+
+   Caminho completo no seu PC:
+   C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\Schema.sql
+
+
+2. O QUE FAZER NO APP DO MYSQL?
+   - Abra o MySQL Workbench (ou o app que você usa).
+   - Conecte no servidor.
+   - Menu: File → Open SQL Script.
+   - Vá na pasta Backend e abra o arquivo Schema.sql.
+   - Clique no ícone do raio (Execute) para rodar o script.
+   Pronto. O banco "axiomcode" e as tabelas são criados ali. Não precisa criar o banco na mão.
+
+
+3. COMO CRIAR O USUÁRIO ADMIN?
+   NÃO é no MySQL. É no navegador, depois de rodar o programa:
+
+   a) Abra o PowerShell ou CMD e digite:
+      cd C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend
+      dotnet run
+
+   b) Quando aparecer a mensagem "AxiomCode - Servidor iniciado!" e "http://localhost:5000", abra o navegador.
+      (Se não aparecer nada, tente abrir o navegador mesmo assim e digite: http://localhost:5000)
+
+   c) Digite na barra de endereço:
+      http://localhost:5000/setup
+
+   d) Na página que abrir, coloque um nome de usuário e uma senha e clique em "Criar admin".
+   Esse usuário JÁ É o administrador. Depois faça login em http://localhost:5000/login com esse nome e senha.
+
+
+GUIA COMPLETO (passo a passo detalhado):
+   Abra o arquivo: Backend \ LEIA-ME-PRIMEIRO.md
