@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AxiomCode.Backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82fdcd3b5463cf6bf69c72e057dcca5c10b01853")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0083f6f3bdaa830d138ffd24446fe24bac93b2dc")]
 [assembly: System.Reflection.AssemblyProductAttribute("AxiomCode.Backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AxiomCode.Backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -28,3 +28,5 @@ C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\obj\Debug\net8.0\ref
 C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\obj\Debug\net8.0\AxiomCode.Backend.pdb
 C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\obj\Debug\net8.0\AxiomCode.Backend.genruntimeconfig.cache
 C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\obj\Debug\net8.0\ref\AxiomCode.Backend.dll
+C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\bin\Debug\net8.0\Npgsql.dll
+C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll

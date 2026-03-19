@@ -1,10 +1,10 @@
-using MySqlConnector;
+using Npgsql;
 using System.Text;
 using System.Security.Cryptography;
 
 // ============== CONFIGURAÇÃO ==============
 var connectionString = Environment.GetEnvironmentVariable("AXIOM_DB")
-    ?? "Server=localhost;Database=axiomcode;User=root;Password=;";
+    ?? "Host=localhost;Port=5432;Database=axiomcode;Username=postgres;Password=123456";
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
 builder.Services.AddAntiforgery();
@@ -70,9 +70,9 @@ app.MapPost("/login", async (HttpContext ctx, HttpRequest req) =>
     if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(senha))
         return Results.Redirect("/login?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT id, nome_usuario, senha_hash, eh_admin FROM usuarios WHERE nome_usuario = @u", conn);
+    await using var cmd = new NpgsqlCommand("SELECT id, nome_usuario, senha_hash, eh_admin FROM usuarios WHERE nome_usuario = @u", conn);
     cmd.Parameters.AddWithValue("u", user);
     await using var r = await cmd.ExecuteReaderAsync();
     if (!await r.ReadAsync())
@@ -98,9 +98,9 @@ app.MapGet("/logout", (HttpContext ctx) =>
 // ----- Setup: criar primeiro usuário admin (só funciona se ainda não existir nenhum usuário)
 app.MapGet("/setup", async () =>
 {
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT COUNT(*) FROM usuarios", conn);
+    await using var cmd = new NpgsqlCommand("SELECT COUNT(*) FROM usuarios", conn);
     var count = (long)(await cmd.ExecuteScalarAsync() ?? 0);
     if (count > 0)
         return Results.Content(Layout("Setup", "<p>Já existem usuários. Use o login normal.</p><a href=\"/login\">Login</a>"), "text/html; charset=utf-8");
@@ -134,9 +134,9 @@ app.MapPost("/registro", async (HttpRequest req) =>
     var senha = form["senha"].ToString() ?? "";
     if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(senha))
         return Results.Redirect("/registro?erro=1");
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT IGNORE INTO usuarios (nome_usuario, senha_hash, eh_admin) VALUES (@u, @h, FALSE)", conn);
+    await using var cmd = new NpgsqlCommand("insert into usuarios (nome_usuario, senha_hash, eh_admin) VALUES (@u, @h, FALSE)", conn);
     cmd.Parameters.AddWithValue("u", user);
     cmd.Parameters.AddWithValue("h", HashSenha(senha));
     var n = await cmd.ExecuteNonQueryAsync();
@@ -151,14 +151,14 @@ app.MapPost("/setup", async (HttpContext ctx, HttpRequest req) =>
     if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(senha))
         return Results.Redirect("/setup?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var c = new MySqlCommand("SELECT COUNT(*) FROM usuarios", conn);
+    await using var c = new NpgsqlCommand("SELECT COUNT(*) FROM usuarios", conn);
     var count = (long)(await c.ExecuteScalarAsync() ?? 0);
     if (count > 0)
         return Results.Redirect("/login");
 
-    await using var cmd = new MySqlCommand("INSERT INTO usuarios (nome_usuario, senha_hash, eh_admin) VALUES (@u, @h, TRUE)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO usuarios (nome_usuario, senha_hash, eh_admin) VALUES (@u, @h, TRUE)", conn);
     cmd.Parameters.AddWithValue("u", user);
     cmd.Parameters.AddWithValue("h", HashSenha(senha));
     await cmd.ExecuteNonQueryAsync();
@@ -179,9 +179,9 @@ app.MapPost("/contato", async (HttpRequest req) =>
     if (string.IsNullOrEmpty(nome) || string.IsNullOrEmpty(telefone) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(mensagem))
         return Results.Redirect("/contato.html?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT INTO contatos (nome, telefone, email, assunto, mensagem) VALUES (@n,@t,@e,@a,@m)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO contatos (nome, telefone, email, assunto, mensagem) VALUES (@n,@t,@e,@a,@m)", conn);
     cmd.Parameters.AddWithValue("n", nome);
     cmd.Parameters.AddWithValue("t", telefone);
     cmd.Parameters.AddWithValue("e", email);
@@ -194,9 +194,9 @@ app.MapPost("/contato", async (HttpRequest req) =>
 // ----- Eventos (lista pública; usuário pode se inscrever)
 app.MapGet("/eventos", async (HttpRequest req) =>
 {
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT id, titulo, data_evento, horario, endereco, descricao, foto_url FROM eventos ORDER BY data_evento, horario", conn);
+    await using var cmd = new NpgsqlCommand("SELECT id, titulo, data_evento, horario, endereco, descricao, foto_url FROM eventos ORDER BY data_evento, horario", conn);
     var sb = new StringBuilder();
     await using var r = await cmd.ExecuteReaderAsync();
     while (await r.ReadAsync())
@@ -227,9 +227,9 @@ app.MapPost("/eventos/inscrever", async (HttpContext ctx, HttpRequest req) =>
     var form = await req.ReadFormAsync();
     if (!int.TryParse(form["evento_id"].ToString(), out var eventoId))
         return Results.Redirect("/eventos");
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT IGNORE INTO inscricoes_eventos (evento_id, usuario_id) VALUES (@e,@u)", conn);
+    await using var cmd = new NpgsqlCommand("insert into inscricoes_eventos (evento_id, usuario_id) VALUES (@e,@u)", conn);
     cmd.Parameters.AddWithValue("e", eventoId);
     cmd.Parameters.AddWithValue("u", userId.Value);
     await cmd.ExecuteNonQueryAsync();
@@ -239,9 +239,9 @@ app.MapPost("/eventos/inscrever", async (HttpContext ctx, HttpRequest req) =>
 // ----- Blog (só leitura)
 app.MapGet("/blog", async () =>
 {
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT id, titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog ORDER BY data_publicacao DESC, horario DESC", conn);
+    await using var cmd = new NpgsqlCommand("SELECT id, titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog ORDER BY data_publicacao DESC, horario DESC", conn);
     var sb = new StringBuilder();
     await using var r = await cmd.ExecuteReaderAsync();
     while (await r.ReadAsync())
@@ -259,9 +259,9 @@ app.MapGet("/blog", async () =>
 
 app.MapGet("/blog/{id:int}", async (int id) =>
 {
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog WHERE id = @id", conn);
+    await using var cmd = new NpgsqlCommand("SELECT titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog WHERE id = @id", conn);
     cmd.Parameters.AddWithValue("id", id);
     await using var r = await cmd.ExecuteReaderAsync();
     if (!await r.ReadAsync())
@@ -282,17 +282,17 @@ app.MapGet("/admin", async (HttpRequest req) =>
     if (!userId.HasValue || !isAdmin)
         return Results.Redirect("/login?voltar=/admin");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
 
     var sbEventos = new StringBuilder();
-    await using (var cmd = new MySqlCommand("SELECT id, titulo, data_evento, horario, endereco FROM eventos ORDER BY data_evento DESC", conn))
+    await using (var cmd = new NpgsqlCommand("SELECT id, titulo, data_evento, horario, endereco FROM eventos ORDER BY data_evento DESC", conn))
     await using (var r = await cmd.ExecuteReaderAsync())
         while (await r.ReadAsync())
             sbEventos.AppendLine($"<li>{r.GetString(1)} - {r.GetDateTime(2):dd/MM/yyyy} - <a href=\"/admin/eventos\">Ver</a></li>");
 
     var sbBlog = new StringBuilder();
-    await using (var cmd = new MySqlCommand("SELECT id, titulo, data_publicacao FROM artigos_blog ORDER BY data_publicacao DESC", conn))
+    await using (var cmd = new NpgsqlCommand("SELECT id, titulo, data_publicacao FROM artigos_blog ORDER BY data_publicacao DESC", conn))
     await using (var r = await cmd.ExecuteReaderAsync())
         while (await r.ReadAsync())
             sbBlog.AppendLine($"<li>{r.GetString(1)} - <a href=\"/blog/{r.GetInt32(0)}\">Ver</a></li>");
@@ -340,9 +340,9 @@ app.MapPost("/admin/eventos", async (HttpContext ctx, HttpRequest req) =>
     if (!DateOnly.TryParse(dataStr, out var data) || !TimeOnly.TryParse(horarioStr, out var horario))
         return Results.Redirect("/admin/eventos?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT INTO eventos (titulo, data_evento, horario, endereco, descricao, foto_url) VALUES (@t,@d,@h,@e,@desc,@f)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO eventos (titulo, data_evento, horario, endereco, descricao, foto_url) VALUES (@t,@d,@h,@e,@desc,@f)", conn);
     cmd.Parameters.AddWithValue("t", titulo);
     cmd.Parameters.AddWithValue("d", data);
     cmd.Parameters.AddWithValue("h", horario);
@@ -386,9 +386,9 @@ app.MapPost("/admin/blog", async (HttpContext ctx, HttpRequest req) =>
     if (!DateOnly.TryParse(dataStr, out var data) || !TimeOnly.TryParse(horarioStr, out var horario))
         return Results.Redirect("/admin/blog?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT INTO artigos_blog (titulo, data_publicacao, horario, descricao, foto_url) VALUES (@t,@d,@h,@desc,@f)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO artigos_blog (titulo, data_publicacao, horario, descricao, foto_url) VALUES (@t,@d,@h,@desc,@f)", conn);
     cmd.Parameters.AddWithValue("t", titulo);
     cmd.Parameters.AddWithValue("d", data);
     cmd.Parameters.AddWithValue("h", horario);
