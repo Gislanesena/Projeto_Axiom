@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>AxiomCode - Login</title>
+    <meta name="description" content="Acesso de usuarios ao AxiomCode">
+    <meta name="author" content="Gislane Sena">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <div class="wrapperContainer-blue wrapperContainer-fixed" style="margin-top: -20px;">
+            <header class="headercontainer">
+                <img src="Imagens/AXIOMretrato.svg" class="img-logo" alt="Logotipo AxiomCode">
+                <nav class="header_nav">
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="eventos.html">Eventos</a></li>
+                        <li><a href="contato.html">Contato</a></li>
+                        <li><a href="login.html">Login</a></li>
+                    </ul>
+                </nav>
+            </header>
+        </div>
+        <br>
+
+        <div class="conteudo-centralizado">
+            <section class="wrapperContainer homepage">
+                <div>
+                    <h1>Entrar no sistema</h1>
+                    <br>
+                    <p>Usuario de teste ja cadastrado: <strong>adm</strong> e senha <strong>12345678</strong>.</p>
+                </div>
+            </section>
+
+            <div id="msg-login-ok" class="msg-ok" style="display: none;"></div>
+            <div id="msg-login-erro" class="msg-erro" style="display: none;"></div>
+
+            <form id="form-login" class="form-contato">
+                <label class="obrigatorio">Usuario</label>
+                <input type="text" name="nome_usuario" required placeholder="Digite seu usuario">
+
+                <label class="obrigatorio">Senha</label>
+                <input type="password" name="senha" required placeholder="Digite sua senha">
+
+                <button type="submit" class="btn-enviar">Entrar</button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        Copyright &copy; 2026<br>
+        Desenvolvido por SenaWeb
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

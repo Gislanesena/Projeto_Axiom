@@ -15,9 +15,9 @@
                 <nav class="header_nav">
                     <ul>
                         <li><a href="index.html">Home</a></li>
-                        <li><a href="blog.html">Blog</a></li>
+                        <li><a href="eventos.html">Eventos</a></li>
                         <li><a href="contato.html">Contato</a></li>
-                        <li><a href="/login">Login</a></li>
+                        <li><a href="login.html">Login</a></li>
                     </ul>
                 </nav>
             </header>
@@ -36,7 +36,7 @@
             <div id="msg-ok" class="msg-ok" style="display: none;">Mensagem enviada com sucesso. Obrigado pelo contato!</div>
             <div id="msg-erro" class="msg-erro" style="display: none;">Preencha todos os campos obrigatórios (nome, telefone, e-mail e mensagem).</div>
 
-            <form class="form-contato" method="post" action="/contato">
+            <form id="form-contato" class="form-contato">
                 <label class="obrigatorio">Nome</label>
                 <input type="text" name="nome" required placeholder="Seu nome completo">
 
@@ -64,17 +64,6 @@
         Desenvolvido por SenaWeb
     </footer>
 
-    <script>
-        (function () {
-            var params = new URLSearchParams(window.location.search);
-            if (params.get('ok') === '1') {
-                document.getElementById('msg-ok').style.display = 'block';
-                document.getElementById('msg-erro').style.display = 'none';
-            } else if (params.get('erro') === '1') {
-                document.getElementById('msg-erro').style.display = 'block';
-                document.getElementById('msg-ok').style.display = 'none';
-            }
-        })();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

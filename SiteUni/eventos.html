@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="utf-8">
-    <title>AxiomCode - Blog</title>
+    <title>AxiomCode - Eventos</title>
     <meta name="description" content="Suporte e apoio a estudantes em todos os semestres da faculdade">
     <meta name="author" content="Gislane Sena">
     <link rel="stylesheet" href="style.css">
@@ -15,9 +15,9 @@
                 <nav class="header_nav">
                     <ul>
                         <li><a href="index.html">Home</a></li>
-                        <li><a href="blog.html">Blog</a></li>
+                        <li><a href="eventos.html">Eventos</a></li>
                         <li><a href="contato.html">Contato</a></li>
-                        <li><a href="#login">Login</a></li>
+                        <li><a href="login.html">Login</a></li>
                     </ul>
                 </nav>
             </header>
@@ -28,10 +28,14 @@
             <section class="wrapperContainer homepage">
                 <div>
                     <br>
-                    <h1>Veja as últimas atualizações</h1>
-                    <p>Nosso blog tem o intuito de trazer conteúdo de tecnologia com linguagem natural e didática, focada para estudantes da área. Contamos com atualizações de eventos da comunidade tech e aprendizado de disciplinas.</p>
+                    <h1>Próximos eventos</h1>
+                    <p>Confira os eventos disponíveis e clique em "Inscrever-se" para testar o fluxo com banco de dados.</p>
                 </div>
             </section>
+
+            <div id="msg-evento" class="msg-ok" style="display: none;"></div>
+            <div id="msg-evento-erro" class="msg-erro" style="display: none;"></div>
+            <section id="lista-eventos" class="eventos-grid"></section>
         </div>
     </main>
 
@@ -39,5 +43,6 @@
         Copyright &copy; 2026<br>
         Desenvolvido por SenaWeb
     </footer>
+    <script src="script.js"></script>
 </body>
 </html>

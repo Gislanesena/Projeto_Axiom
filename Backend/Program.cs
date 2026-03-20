@@ -1,6 +1,7 @@
 using Npgsql;
 using System.Text;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 // ============== CONFIGURAÇÃO ==============
 var connectionString = Environment.GetEnvironmentVariable("AXIOM_DB")
@@ -37,16 +38,69 @@ static (int? userId, bool isAdmin) LerUsuarioCookie(HttpRequest req)
 }
 static string Layout(string titulo, string body, bool isAdmin = false)
 {
-    var nav = @"<nav><a href=""/"">Home</a> | <a href=""/eventos"">Eventos</a> | <a href=""/blog"">Blog</a> | <a href=""/contato"">Contato</a> | ";
+    var nav = @"<nav><a href=""/"">Home</a> | <a href=""/eventos"">Eventos</a> | <a href=""/contato"">Contato</a> | ";
     if (isAdmin) nav += @"<a href=""/admin"">Admin</a> | ";
     nav += @"<a href=""/login"">Login</a></nav>";
     return $@"<!DOCTYPE html><html lang=""pt-br""><head><meta charset=""utf-8""/><title>{titulo}</title></head><body>{nav}<hr/>{body}</body></html>";
 }
 
+static async Task InicializarDadosPadraoAsync(string connectionString)
+{
+    await using var conn = new NpgsqlConnection(connectionString);
+    await conn.OpenAsync();
+
+    // Usuário simples solicitado: adm / 12345678
+    await using (var cmd = new NpgsqlCommand("SELECT id FROM usuarios WHERE nome_usuario = 'adm'", conn))
+    {
+        var existe = await cmd.ExecuteScalarAsync();
+        if (existe is null)
+        {
+            await using var insertAdm = new NpgsqlCommand(
+                "INSERT INTO usuarios (nome_usuario, senha_hash, eh_admin) VALUES ('adm', @h, TRUE)",
+                conn
+            );
+            insertAdm.Parameters.AddWithValue("h", HashSenha("12345678"));
+            await insertAdm.ExecuteNonQueryAsync();
+        }
+    }
+
+    // Dois eventos para teste com inscrição
+    await using (var checkEventos = new NpgsqlCommand("SELECT COUNT(*) FROM eventos", conn))
+    {
+        var totalEventos = (long)(await checkEventos.ExecuteScalarAsync() ?? 0);
+        if (totalEventos < 2)
+        {
+            await using var insertEvento1 = new NpgsqlCommand(@"
+                INSERT INTO eventos (titulo, data_evento, horario, endereco, descricao, foto_url)
+                VALUES (@t, @d, @h, @e, @desc, @f)", conn);
+            insertEvento1.Parameters.AddWithValue("t", "Workshop de Git e GitHub");
+            insertEvento1.Parameters.AddWithValue("d", DateOnly.FromDateTime(DateTime.Today.AddDays(7)));
+            insertEvento1.Parameters.AddWithValue("h", new TimeOnly(19, 0));
+            insertEvento1.Parameters.AddWithValue("e", "Laboratorio 3 - Campus Central");
+            insertEvento1.Parameters.AddWithValue("desc", "Encontro pratico para versionamento, branches e pull requests.");
+            insertEvento1.Parameters.AddWithValue("f", "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=900");
+            await insertEvento1.ExecuteNonQueryAsync();
+
+            await using var insertEvento2 = new NpgsqlCommand(@"
+                INSERT INTO eventos (titulo, data_evento, horario, endereco, descricao, foto_url)
+                VALUES (@t, @d, @h, @e, @desc, @f)", conn);
+            insertEvento2.Parameters.AddWithValue("t", "Mesa Redonda: Carreira em Tecnologia");
+            insertEvento2.Parameters.AddWithValue("d", DateOnly.FromDateTime(DateTime.Today.AddDays(14)));
+            insertEvento2.Parameters.AddWithValue("h", new TimeOnly(18, 30));
+            insertEvento2.Parameters.AddWithValue("e", "Auditorio Principal - Bloco A");
+            insertEvento2.Parameters.AddWithValue("desc", "Painel com profissionais do mercado para orientar estudantes.");
+            insertEvento2.Parameters.AddWithValue("f", "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=900");
+            await insertEvento2.ExecuteNonQueryAsync();
+        }
+    }
+}
+
 // ============== ROTAS ==============
 
+await InicializarDadosPadraoAsync(connectionString);
+
 // Página inicial
-app.MapGet("/", () => Results.Redirect("/eventos"));
+app.MapGet("/", () => Results.Redirect("/index.html"));
 
 // ----- Login (admin e usuários: usuário e senha)
 app.MapGet("/login", () =>
@@ -86,6 +140,44 @@ app.MapPost("/login", async (HttpContext ctx, HttpRequest req) =>
     ctx.Response.Cookies.Append("uid", id.ToString(), new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Lax, MaxAge = TimeSpan.FromHours(24) });
     ctx.Response.Cookies.Append("adm", ehAdmin ? "1" : "0", new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Lax, MaxAge = TimeSpan.FromHours(24) });
     return Results.Redirect(ehAdmin ? "/admin" : "/eventos");
+});
+
+// Login via frontend (JSON)
+app.MapPost("/api/login", async (HttpContext ctx, HttpRequest req) =>
+{
+    LoginDto? payload;
+    try
+    {
+        payload = await req.ReadFromJsonAsync<LoginDto>();
+    }
+    catch
+    {
+        return Results.BadRequest(new { erro = "JSON invalido." });
+    }
+
+    var user = payload?.NomeUsuario?.Trim() ?? "";
+    var senha = payload?.Senha ?? "";
+    if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(senha))
+        return Results.BadRequest(new { erro = "Informe usuario e senha." });
+
+    await using var conn = new NpgsqlConnection(connectionString);
+    await conn.OpenAsync();
+    await using var cmd = new NpgsqlCommand("SELECT id, senha_hash, eh_admin FROM usuarios WHERE nome_usuario = @u", conn);
+    cmd.Parameters.AddWithValue("u", user);
+    await using var r = await cmd.ExecuteReaderAsync();
+    if (!await r.ReadAsync())
+        return Results.Unauthorized();
+
+    var id = r.GetInt32(0);
+    var hash = r.GetString(1);
+    var ehAdmin = r.GetBoolean(2);
+    if (!VerificarSenha(senha, hash))
+        return Results.Unauthorized();
+
+    ctx.Response.Cookies.Append("uid", id.ToString(), new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Lax, MaxAge = TimeSpan.FromHours(24) });
+    ctx.Response.Cookies.Append("adm", ehAdmin ? "1" : "0", new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Lax, MaxAge = TimeSpan.FromHours(24) });
+
+    return Results.Ok(new { ok = true, admin = ehAdmin });
 });
 
 app.MapGet("/logout", (HttpContext ctx) =>
@@ -191,8 +283,100 @@ app.MapPost("/contato", async (HttpRequest req) =>
     return Results.Redirect("/contato.html?ok=1");
 });
 
+// Contato via frontend (JSON)
+app.MapPost("/api/contato", async (HttpRequest req) =>
+{
+    ContatoDto? payload;
+    try
+    {
+        payload = await req.ReadFromJsonAsync<ContatoDto>();
+    }
+    catch
+    {
+        return Results.BadRequest(new { erro = "JSON invalido." });
+    }
+
+    var nome = payload?.Nome?.Trim() ?? "";
+    var telefone = payload?.Telefone?.Trim() ?? "";
+    var email = payload?.Email?.Trim() ?? "";
+    var assunto = payload?.Assunto?.Trim();
+    var mensagem = payload?.Mensagem?.Trim() ?? "";
+    if (string.IsNullOrEmpty(nome) || string.IsNullOrEmpty(telefone) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(mensagem))
+        return Results.BadRequest(new { erro = "Campos obrigatorios: nome, telefone, email e mensagem." });
+
+    await using var conn = new NpgsqlConnection(connectionString);
+    await conn.OpenAsync();
+    await using var cmd = new NpgsqlCommand("INSERT INTO contatos (nome, telefone, email, assunto, mensagem) VALUES (@n,@t,@e,@a,@m)", conn);
+    cmd.Parameters.AddWithValue("n", nome);
+    cmd.Parameters.AddWithValue("t", telefone);
+    cmd.Parameters.AddWithValue("e", email);
+    cmd.Parameters.AddWithValue("a", (object?)assunto ?? DBNull.Value);
+    cmd.Parameters.AddWithValue("m", mensagem);
+    await cmd.ExecuteNonQueryAsync();
+    return Results.Ok(new { ok = true });
+});
+
 // ----- Eventos (lista pública; usuário pode se inscrever)
-app.MapGet("/eventos", async (HttpRequest req) =>
+app.MapGet("/eventos", () => Results.Redirect("/eventos.html"));
+
+app.MapGet("/api/eventos", async () =>
+{
+    await using var conn = new NpgsqlConnection(connectionString);
+    await conn.OpenAsync();
+    await using var cmd = new NpgsqlCommand("SELECT id, titulo, data_evento, horario, endereco, descricao, foto_url FROM eventos ORDER BY data_evento, horario", conn);
+    var eventos = new List<object>();
+    await using var r = await cmd.ExecuteReaderAsync();
+    while (await r.ReadAsync())
+    {
+        eventos.Add(new
+        {
+            id = r.GetInt32(0),
+            titulo = r.GetString(1),
+            dataEvento = r.GetDateTime(2).ToString("yyyy-MM-dd"),
+            horario = r.GetTimeSpan(3).ToString(@"hh\:mm"),
+            endereco = r.GetString(4),
+            descricao = r.IsDBNull(5) ? "" : r.GetString(5),
+            fotoUrl = r.IsDBNull(6) ? "" : r.GetString(6)
+        });
+    }
+    return Results.Json(eventos);
+});
+
+app.MapGet("/api/auth/status", (HttpRequest req) =>
+{
+    var (userId, isAdmin) = LerUsuarioCookie(req);
+    return Results.Json(new { logado = userId.HasValue, admin = isAdmin, userId });
+});
+
+app.MapPost("/api/eventos/inscrever", async (HttpRequest req) =>
+{
+    var (userId, _) = LerUsuarioCookie(req);
+    if (!userId.HasValue)
+        return Results.Unauthorized();
+
+    InscricaoDto? payload;
+    try
+    {
+        payload = await req.ReadFromJsonAsync<InscricaoDto>();
+    }
+    catch
+    {
+        return Results.BadRequest(new { erro = "JSON invalido." });
+    }
+
+    if (payload is null || payload.EventoId <= 0)
+        return Results.BadRequest(new { erro = "Evento invalido." });
+
+    await using var conn = new NpgsqlConnection(connectionString);
+    await conn.OpenAsync();
+    await using var cmd = new NpgsqlCommand("INSERT INTO inscricoes_eventos (evento_id, usuario_id) VALUES (@e,@u) ON CONFLICT (evento_id, usuario_id) DO NOTHING", conn);
+    cmd.Parameters.AddWithValue("e", payload.EventoId);
+    cmd.Parameters.AddWithValue("u", userId.Value);
+    await cmd.ExecuteNonQueryAsync();
+    return Results.Ok(new { ok = true });
+});
+
+app.MapGet("/eventos-legado", async (HttpRequest req) =>
 {
     await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
@@ -237,43 +421,7 @@ app.MapPost("/eventos/inscrever", async (HttpContext ctx, HttpRequest req) =>
 });
 
 // ----- Blog (só leitura)
-app.MapGet("/blog", async () =>
-{
-    await using var conn = new NpgsqlConnection(connectionString);
-    await conn.OpenAsync();
-    await using var cmd = new NpgsqlCommand("SELECT id, titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog ORDER BY data_publicacao DESC, horario DESC", conn);
-    var sb = new StringBuilder();
-    await using var r = await cmd.ExecuteReaderAsync();
-    while (await r.ReadAsync())
-    {
-        var id = r.GetInt32(0);
-        var titulo = r.GetString(1);
-        var data = r.GetDateTime(2);
-        var horario = r.GetTimeSpan(3);
-        var desc = r.IsDBNull(4) ? "" : r.GetString(4);
-        var foto = r.IsDBNull(5) ? "" : r.GetString(5);
-        sb.Append($@"<div style=""border:1px solid #ccc;padding:1em;margin:1em 0;""><h3><a href=""/blog/{id}"">{titulo}</a></h3><p>Publicado em {data:dd/MM/yyyy} às {horario:hh\:mm}</p></div>");
-    }
-    return Results.Content(Layout("Blog", "<h1>Blog</h1>" + sb.ToString()), "text/html; charset=utf-8");
-});
-
-app.MapGet("/blog/{id:int}", async (int id) =>
-{
-    await using var conn = new NpgsqlConnection(connectionString);
-    await conn.OpenAsync();
-    await using var cmd = new NpgsqlCommand("SELECT titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog WHERE id = @id", conn);
-    cmd.Parameters.AddWithValue("id", id);
-    await using var r = await cmd.ExecuteReaderAsync();
-    if (!await r.ReadAsync())
-        return Results.NotFound();
-    var titulo = r.GetString(0);
-    var data = r.GetDateTime(1);
-    var horario = r.GetTimeSpan(2);
-    var desc = r.IsDBNull(3) ? "" : r.GetString(3);
-    var foto = r.IsDBNull(4) ? "" : r.GetString(4);
-    var body = $@"<h1>{titulo}</h1><p>Publicado em {data:dd/MM/yyyy} às {horario:hh\:mm}</p>{(string.IsNullOrEmpty(desc) ? "" : $"<div>{desc}</div>")}{(string.IsNullOrEmpty(foto) ? "" : $"<img src=\"{foto}\" alt=\"\" style=\"max-width:300px;\"/>")}<p><a href=""/blog"">Voltar ao blog</a></p>";
-    return Results.Content(Layout(titulo, body), "text/html; charset=utf-8");
-});
+app.MapGet("/blog", () => Results.Redirect("/eventos.html"));
 
 // ----- Área admin (somente administradores)
 app.MapGet("/admin", async (HttpRequest req) =>
@@ -295,7 +443,7 @@ app.MapGet("/admin", async (HttpRequest req) =>
     await using (var cmd = new NpgsqlCommand("SELECT id, titulo, data_publicacao FROM artigos_blog ORDER BY data_publicacao DESC", conn))
     await using (var r = await cmd.ExecuteReaderAsync())
         while (await r.ReadAsync())
-            sbBlog.AppendLine($"<li>{r.GetString(1)} - <a href=\"/blog/{r.GetInt32(0)}\">Ver</a></li>");
+            sbBlog.AppendLine($"<li>{r.GetString(1)}</li>");
 
     var body = $@"
         <h1>Área do administrador</h1>
@@ -415,6 +563,9 @@ Console.WriteLine("");
 app.Run();
 
 // ============== CLASSES (POO) – refletem as tabelas do MySQL ==============
+public record LoginDto(string NomeUsuario, string Senha);
+public record ContatoDto(string Nome, string Telefone, string Email, string? Assunto, string Mensagem);
+public record InscricaoDto(int EventoId);
 public class Usuario { public int Id { get; set; } public string NomeUsuario { get; set; } = ""; public string SenhaHash { get; set; } = ""; public string? Email { get; set; } public bool EhAdmin { get; set; } public DateTime CriadoEm { get; set; } }
 public class Evento { public int Id { get; set; } public string Titulo { get; set; } = ""; public DateOnly DataEvento { get; set; } public TimeOnly Horario { get; set; } public string Endereco { get; set; } = ""; public string? Descricao { get; set; } public string? FotoUrl { get; set; } public DateTime CriadoEm { get; set; } }
 public class ArtigoBlog { public int Id { get; set; } public string Titulo { get; set; } = ""; public DateOnly DataPublicacao { get; set; } public TimeOnly Horario { get; set; } public string? Descricao { get; set; } public string? FotoUrl { get; set; } public DateTime CriadoEm { get; set; } }
