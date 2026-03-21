@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\gisla\\OneDrive\\Documentos\\TreinamentosSite\\Backend\\AxiomCode.Backend.csproj": {}
+    "C:\\Users\\gisla\\OneDrive\\Documentos\\DesenvolvimentoWeb\\backend\\AxiomCode.Backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\gisla\\OneDrive\\Documentos\\TreinamentosSite\\Backend\\AxiomCode.Backend.csproj": {
+    "C:\\Users\\gisla\\OneDrive\\Documentos\\DesenvolvimentoWeb\\backend\\AxiomCode.Backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\gisla\\OneDrive\\Documentos\\TreinamentosSite\\Backend\\AxiomCode.Backend.csproj",
+        "projectUniqueName": "C:\\Users\\gisla\\OneDrive\\Documentos\\DesenvolvimentoWeb\\backend\\AxiomCode.Backend.csproj",
         "projectName": "AxiomCode.Backend",
-        "projectPath": "C:\\Users\\gisla\\OneDrive\\Documentos\\TreinamentosSite\\Backend\\AxiomCode.Backend.csproj",
+        "projectPath": "C:\\Users\\gisla\\OneDrive\\Documentos\\DesenvolvimentoWeb\\backend\\AxiomCode.Backend.csproj",
         "packagesPath": "C:\\Users\\gisla\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\gisla\\OneDrive\\Documentos\\TreinamentosSite\\Backend\\obj\\",
+        "outputPath": "C:\\Users\\gisla\\OneDrive\\Documentos\\DesenvolvimentoWeb\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
