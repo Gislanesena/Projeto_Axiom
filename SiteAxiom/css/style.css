@@ -379,3 +379,134 @@ footer {
     text-align: center;
     text-shadow: -1px 1px 5px #cccccc5c;
 }
+
+/* ========================= */
+/* RESPONSIVIDADE (TABLET)   */
+/* ========================= */
+@media (max-width: 1024px) {
+
+    header {
+        padding: 30px 40px;
+    }
+
+    .img-logo {
+        width: 300px;
+        transform: translateY(-20px);
+        margin-bottom: -60px;
+    }
+
+    .formsspace {
+        margin: 40px 40px;
+    }
+
+    .btnspace {
+        margin: 40px;
+    }
+
+    .relevante-container {
+        gap: 10px;
+    }
+}
+
+
+/* ========================= */
+/* RESPONSIVIDADE (CELULAR)  */
+/* ========================= */
+@media (max-width: 768px) {
+
+    header {
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .header_nav ul {
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .img-logo {
+        width: 220px;
+        transform: none;
+        margin-bottom: 10px;
+    }
+
+    .homepage {
+        margin-top: 140px;
+    }
+
+    .relevante-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card-relevante {
+        width: 90%;
+        margin: 20px 0;
+    }
+
+    .card-relevante-conteudo p {
+        padding: 30px 20px;
+        font-size: 18px;
+    }
+
+    .formsspace {
+        margin: 30px 20px;
+    }
+
+    .btnspace {
+        margin: 30px 20px;
+    }
+
+    .btn {
+        font-size: 16px;
+        padding: 15px 20px;
+    }
+
+    p {
+        font-size: 18px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+}
+
+
+/* ========================= */
+/* RESPONSIVIDADE (TELAS PEQUENAS) */
+/* ========================= */
+@media (max-width: 480px) {
+
+    .conteudo-centralizado {
+        padding: 0 10px;
+    }
+
+    .img-logo {
+        width: 180px;
+    }
+
+    .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .forms {
+        width: 100%;
+    }
+
+    .carrossel {
+        max-width: 100%;
+    }
+
+    button {
+        width: 20px;
+        height: 20px;
+    }
+
+    .form-contato {
+        padding: 1.5em;
+    }
+}
