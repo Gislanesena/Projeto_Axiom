@@ -1,14 +1,53 @@
-using MySqlConnector;
-using System.Text;
 using System.Security.Cryptography;
+using System.Text;
+using Npgsql;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Hosting;
 
 // ============== CONFIGURAÇÃO ==============
-var connectionString = Environment.GetEnvironmentVariable("AXIOM_DB")
-    ?? "Server=localhost;Database=axiomcode;User=root;Password=;";
+// Ordem: variável AXIOM_DB → appsettings (ConnectionStrings:Default) → padrão do projeto
+// Padrão = Docker Compose na raiz: usuário admin, senha 123456789, banco axiomcode
+// SSL Mode=Disable evita falha de conexão em PostgreSQL local sem SSL
+const string DefaultConnectionString =
+    "Host=localhost;Port=5432;Database=axiomcode;Username=admin;Password=123456789;SSL Mode=Disable";
+
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://localhost:5000");
+builder.WebHost.UseUrls("http://localhost:5001");
 builder.Services.AddAntiforgery();
+
+var connectionString = Environment.GetEnvironmentVariable("AXIOM_DB")
+    ?? builder.Configuration.GetConnectionString("Default")
+    ?? DefaultConnectionString;
+
 var app = builder.Build();
+
+// Teste rápido ao subir: avisa se PostgreSQL não está acessível (não encerra o servidor)
+await TestarConexaoPostgresAsync(connectionString);
+
+static async Task TestarConexaoPostgresAsync(string cs)
+{
+    try
+    {
+        await using var conn = new NpgsqlConnection(cs);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SELECT 1", conn);
+        await cmd.ExecuteScalarAsync();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("[Banco] PostgreSQL: conexão OK (axiomcode).");
+        Console.ResetColor();
+    }
+    catch (Exception ex)
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("[Banco] ATENÇÃO: não foi possível conectar ao PostgreSQL.");
+        Console.WriteLine("        Erro: " + ex.Message);
+        Console.ResetColor();
+        Console.WriteLine("        → Suba o banco: na pasta do projeto execute: docker compose up -d");
+        Console.WriteLine("        → Crie as tabelas: psql \"postgresql://admin:123456789@localhost:5432/axiomcode\" -f Backend/Schema.sql");
+        Console.WriteLine("        → Ou ajuste AXIOM_DB / ConnectionStrings:Default em appsettings.json");
+        Console.WriteLine();
+    }
+}
 
 // Servir arquivos estáticos do site (HTML, CSS, JS, imagens) a partir da pasta SiteUni
 var siteUniPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "SiteUni");
@@ -46,7 +85,7 @@ static string Layout(string titulo, string body, bool isAdmin = false)
 // ============== ROTAS ==============
 
 // Página inicial
-app.MapGet("/", () => Results.Redirect("/eventos"));
+// app.MapGet("/", () => Results.Redirect("/eventos"));
 
 // ----- Login (admin e usuários: usuário e senha)
 app.MapGet("/login", () =>
@@ -70,9 +109,9 @@ app.MapPost("/login", async (HttpContext ctx, HttpRequest req) =>
     if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(senha))
         return Results.Redirect("/login?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT id, nome_usuario, senha_hash, eh_admin FROM usuarios WHERE nome_usuario = @u", conn);
+    await using var cmd = new NpgsqlCommand("SELECT id, nome_usuario, senha_hash, eh_admin FROM usuarios WHERE nome_usuario = @u", conn);
     cmd.Parameters.AddWithValue("u", user);
     await using var r = await cmd.ExecuteReaderAsync();
     if (!await r.ReadAsync())
@@ -98,9 +137,9 @@ app.MapGet("/logout", (HttpContext ctx) =>
 // ----- Setup: criar primeiro usuário admin (só funciona se ainda não existir nenhum usuário)
 app.MapGet("/setup", async () =>
 {
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT COUNT(*) FROM usuarios", conn);
+    await using var cmd = new NpgsqlCommand("SELECT COUNT(*) FROM usuarios", conn);
     var count = (long)(await cmd.ExecuteScalarAsync() ?? 0);
     if (count > 0)
         return Results.Content(Layout("Setup", "<p>Já existem usuários. Use o login normal.</p><a href=\"/login\">Login</a>"), "text/html; charset=utf-8");
@@ -134,9 +173,9 @@ app.MapPost("/registro", async (HttpRequest req) =>
     var senha = form["senha"].ToString() ?? "";
     if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(senha))
         return Results.Redirect("/registro?erro=1");
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT IGNORE INTO usuarios (nome_usuario, senha_hash, eh_admin) VALUES (@u, @h, FALSE)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO usuarios (nome_usuario, senha_hash, eh_admin) VALUES (@u, @h, FALSE) ON CONFLICT (nome_usuario) DO NOTHING", conn);
     cmd.Parameters.AddWithValue("u", user);
     cmd.Parameters.AddWithValue("h", HashSenha(senha));
     var n = await cmd.ExecuteNonQueryAsync();
@@ -151,14 +190,14 @@ app.MapPost("/setup", async (HttpContext ctx, HttpRequest req) =>
     if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(senha))
         return Results.Redirect("/setup?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var c = new MySqlCommand("SELECT COUNT(*) FROM usuarios", conn);
+    await using var c = new NpgsqlCommand("SELECT COUNT(*) FROM usuarios", conn);
     var count = (long)(await c.ExecuteScalarAsync() ?? 0);
     if (count > 0)
         return Results.Redirect("/login");
 
-    await using var cmd = new MySqlCommand("INSERT INTO usuarios (nome_usuario, senha_hash, eh_admin) VALUES (@u, @h, TRUE)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO usuarios (nome_usuario, senha_hash, eh_admin) VALUES (@u, @h, TRUE)", conn);
     cmd.Parameters.AddWithValue("u", user);
     cmd.Parameters.AddWithValue("h", HashSenha(senha));
     await cmd.ExecuteNonQueryAsync();
@@ -179,9 +218,9 @@ app.MapPost("/contato", async (HttpRequest req) =>
     if (string.IsNullOrEmpty(nome) || string.IsNullOrEmpty(telefone) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(mensagem))
         return Results.Redirect("/contato.html?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT INTO contatos (nome, telefone, email, assunto, mensagem) VALUES (@n,@t,@e,@a,@m)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO contatos (nome, telefone, email, assunto, mensagem) VALUES (@n,@t,@e,@a,@m)", conn);
     cmd.Parameters.AddWithValue("n", nome);
     cmd.Parameters.AddWithValue("t", telefone);
     cmd.Parameters.AddWithValue("e", email);
@@ -194,9 +233,9 @@ app.MapPost("/contato", async (HttpRequest req) =>
 // ----- Eventos (lista pública; usuário pode se inscrever)
 app.MapGet("/eventos", async (HttpRequest req) =>
 {
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT id, titulo, data_evento, horario, endereco, descricao, foto_url FROM eventos ORDER BY data_evento, horario", conn);
+    await using var cmd = new NpgsqlCommand("SELECT id, titulo, data_evento, horario, endereco, descricao, foto_url FROM eventos ORDER BY data_evento, horario", conn);
     var sb = new StringBuilder();
     await using var r = await cmd.ExecuteReaderAsync();
     while (await r.ReadAsync())
@@ -227,9 +266,9 @@ app.MapPost("/eventos/inscrever", async (HttpContext ctx, HttpRequest req) =>
     var form = await req.ReadFormAsync();
     if (!int.TryParse(form["evento_id"].ToString(), out var eventoId))
         return Results.Redirect("/eventos");
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT IGNORE INTO inscricoes_eventos (evento_id, usuario_id) VALUES (@e,@u)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO inscricoes_eventos (evento_id, usuario_id) VALUES (@e,@u) ON CONFLICT (evento_id, usuario_id) DO NOTHING", conn);
     cmd.Parameters.AddWithValue("e", eventoId);
     cmd.Parameters.AddWithValue("u", userId.Value);
     await cmd.ExecuteNonQueryAsync();
@@ -239,9 +278,9 @@ app.MapPost("/eventos/inscrever", async (HttpContext ctx, HttpRequest req) =>
 // ----- Blog (só leitura)
 app.MapGet("/blog", async () =>
 {
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT id, titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog ORDER BY data_publicacao DESC, horario DESC", conn);
+    await using var cmd = new NpgsqlCommand("SELECT id, titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog ORDER BY data_publicacao DESC, horario DESC", conn);
     var sb = new StringBuilder();
     await using var r = await cmd.ExecuteReaderAsync();
     while (await r.ReadAsync())
@@ -259,9 +298,9 @@ app.MapGet("/blog", async () =>
 
 app.MapGet("/blog/{id:int}", async (int id) =>
 {
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("SELECT titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog WHERE id = @id", conn);
+    await using var cmd = new NpgsqlCommand("SELECT titulo, data_publicacao, horario, descricao, foto_url FROM artigos_blog WHERE id = @id", conn);
     cmd.Parameters.AddWithValue("id", id);
     await using var r = await cmd.ExecuteReaderAsync();
     if (!await r.ReadAsync())
@@ -282,17 +321,17 @@ app.MapGet("/admin", async (HttpRequest req) =>
     if (!userId.HasValue || !isAdmin)
         return Results.Redirect("/login?voltar=/admin");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
 
     var sbEventos = new StringBuilder();
-    await using (var cmd = new MySqlCommand("SELECT id, titulo, data_evento, horario, endereco FROM eventos ORDER BY data_evento DESC", conn))
+    await using (var cmd = new NpgsqlCommand("SELECT id, titulo, data_evento, horario, endereco FROM eventos ORDER BY data_evento DESC", conn))
     await using (var r = await cmd.ExecuteReaderAsync())
         while (await r.ReadAsync())
             sbEventos.AppendLine($"<li>{r.GetString(1)} - {r.GetDateTime(2):dd/MM/yyyy} - <a href=\"/admin/eventos\">Ver</a></li>");
 
     var sbBlog = new StringBuilder();
-    await using (var cmd = new MySqlCommand("SELECT id, titulo, data_publicacao FROM artigos_blog ORDER BY data_publicacao DESC", conn))
+    await using (var cmd = new NpgsqlCommand("SELECT id, titulo, data_publicacao FROM artigos_blog ORDER BY data_publicacao DESC", conn))
     await using (var r = await cmd.ExecuteReaderAsync())
         while (await r.ReadAsync())
             sbBlog.AppendLine($"<li>{r.GetString(1)} - <a href=\"/blog/{r.GetInt32(0)}\">Ver</a></li>");
@@ -340,9 +379,9 @@ app.MapPost("/admin/eventos", async (HttpContext ctx, HttpRequest req) =>
     if (!DateOnly.TryParse(dataStr, out var data) || !TimeOnly.TryParse(horarioStr, out var horario))
         return Results.Redirect("/admin/eventos?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT INTO eventos (titulo, data_evento, horario, endereco, descricao, foto_url) VALUES (@t,@d,@h,@e,@desc,@f)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO eventos (titulo, data_evento, horario, endereco, descricao, foto_url) VALUES (@t,@d,@h,@e,@desc,@f)", conn);
     cmd.Parameters.AddWithValue("t", titulo);
     cmd.Parameters.AddWithValue("d", data);
     cmd.Parameters.AddWithValue("h", horario);
@@ -386,9 +425,9 @@ app.MapPost("/admin/blog", async (HttpContext ctx, HttpRequest req) =>
     if (!DateOnly.TryParse(dataStr, out var data) || !TimeOnly.TryParse(horarioStr, out var horario))
         return Results.Redirect("/admin/blog?erro=1");
 
-    await using var conn = new MySqlConnection(connectionString);
+    await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
-    await using var cmd = new MySqlCommand("INSERT INTO artigos_blog (titulo, data_publicacao, horario, descricao, foto_url) VALUES (@t,@d,@h,@desc,@f)", conn);
+    await using var cmd = new NpgsqlCommand("INSERT INTO artigos_blog (titulo, data_publicacao, horario, descricao, foto_url) VALUES (@t,@d,@h,@desc,@f)", conn);
     cmd.Parameters.AddWithValue("t", titulo);
     cmd.Parameters.AddWithValue("d", data);
     cmd.Parameters.AddWithValue("h", horario);
@@ -396,6 +435,25 @@ app.MapPost("/admin/blog", async (HttpContext ctx, HttpRequest req) =>
     cmd.Parameters.AddWithValue("f", (object?)fotoUrl ?? DBNull.Value);
     await cmd.ExecuteNonQueryAsync();
     return Results.Redirect("/admin");
+});
+
+// Diagnóstico: http://localhost:5000/api/health/db — confirma se o PostgreSQL responde
+app.MapGet("/api/health/db", async () =>
+{
+    try
+    {
+        await using var conn = new NpgsqlConnection(connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SELECT 1", conn);
+        await cmd.ExecuteScalarAsync();
+        return Results.Json(new { ok = true, message = "PostgreSQL conectado." });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(
+            new { ok = false, error = ex.Message },
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
 });
 
 Console.WriteLine("");
@@ -414,7 +472,7 @@ Console.WriteLine("");
 
 app.Run();
 
-// ============== CLASSES (POO) – refletem as tabelas do MySQL ==============
+// ============== CLASSES (POO) – refletem as tabelas do PostgreSQL ==============
 public class Usuario { public int Id { get; set; } public string NomeUsuario { get; set; } = ""; public string SenhaHash { get; set; } = ""; public string? Email { get; set; } public bool EhAdmin { get; set; } public DateTime CriadoEm { get; set; } }
 public class Evento { public int Id { get; set; } public string Titulo { get; set; } = ""; public DateOnly DataEvento { get; set; } public TimeOnly Horario { get; set; } public string Endereco { get; set; } = ""; public string? Descricao { get; set; } public string? FotoUrl { get; set; } public DateTime CriadoEm { get; set; } }
 public class ArtigoBlog { public int Id { get; set; } public string Titulo { get; set; } = ""; public DateOnly DataPublicacao { get; set; } public TimeOnly Horario { get; set; } public string? Descricao { get; set; } public string? FotoUrl { get; set; } public DateTime CriadoEm { get; set; } }

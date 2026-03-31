@@ -1,52 +1,79 @@
-# AxiomCode - Backend (C# + MySQL)
+# AxiomCode - Backend (C# + PostgreSQL)
 
 ## Arquivos principais
 
-- **Schema.sql** – Script do banco MySQL (tabelas: usuarios, eventos, artigos_blog, contatos, inscricoes_eventos).
-- **Program.cs** – Toda a aplicação em um arquivo: classes, rotas, login, contato, eventos, blog e admin.
+- **Schema.sql** – Script das tabelas no **PostgreSQL** (`usuarios`, `eventos`, `artigos_blog`, `contatos`, `inscricoes_eventos`).
+- **Program.cs** – Aplicação: rotas, login, contato, eventos, blog e admin.
+- **docker-compose.yml** (na raiz do repositório) – Sobe o PostgreSQL em container com usuário **`admin`** e senha **`123456789`**.
 
-O arquivo **AxiomCode.Backend.csproj** é necessário para o `dotnet run` funcionar.
+O arquivo **AxiomCode.Backend.csproj** referencia o pacote **Npgsql** (driver PostgreSQL para .NET).
 
-## Como rodar
+## Banco de dados (PostgreSQL)
 
-1. **MySQL**: tenha o MySQL instalado. Crie um banco (ex.: `axiomcode`) e execute o **Schema.sql** nele (MySQL Workbench, phpMyAdmin ou linha de comando).
+### Opção A — Docker (recomendado)
 
-2. **Conexão**: por padrão a app usa  
-   `Server=localhost;Database=axiomcode;User=root;Password=;`  
-   Se sua senha do MySQL for diferente, defina a variável de ambiente **AXIOM_DB**, por exemplo:
-   ```powershell
-   $env:AXIOM_DB = "Server=localhost;Database=axiomcode;User=root;Password=SUA_SENHA"
-   ```
+Na pasta do repositório (onde está `docker-compose.yml`):
 
-3. **Rodar a aplicação** (na pasta Backend):
-   ```bash
-   dotnet restore
-   dotnet run
-   ```
+```bash
+docker compose up -d
+```
 
-4. Acesse no navegador **http://localhost:5000**. O site (HTML/CSS) é servido da pasta **SiteUni**; a página de contato tem formulário integrado ao backend.
+Aguarde o container ficar saudável e crie as tabelas:
 
-5. **Primeiro admin**: acesse **http://localhost:5000/setup** e crie o primeiro usuário (será administrador). Depois use **/login** para entrar.
+```bash
+# Windows PowerShell (com psql no PATH) ou use pgAdmin / DBeaver
+psql "postgresql://admin:123456789@localhost:5432/axiomcode" -f Backend/Schema.sql
+```
+
+### Opção B — PostgreSQL instalado localmente
+
+1. Crie o banco `axiomcode` e um usuário com senha (ou use `admin` / `123456789`).
+2. Conecte ao banco `axiomcode` e execute o conteúdo de **Schema.sql**.
+
+### Conexão padrão da aplicação
+
+A string correta está em **`appsettings.json`** (`ConnectionStrings:Default`) e corresponde ao **docker-compose.yml**:
+
+- Banco: **`axiomcode`**
+- Usuário: **`admin`**
+- Senha: **`123456789`**
+- `SSL Mode=Disable` (evita erro de SSL em PostgreSQL local)
+
+Se algo não conectar, abra **http://localhost:5000/api/health/db** — devolve JSON com `ok: true` ou a mensagem de erro.
+
+Para outro servidor ou credenciais, defina a variável de ambiente **AXIOM_DB** (ela **substitui** o appsettings):
+
+```powershell
+$env:AXIOM_DB = "Host=localhost;Port=5432;Database=axiomcode;Username=admin;Password=SUA_SENHA"
+```
+
+## Como rodar o backend
+
+Na pasta **Backend**:
+
+```bash
+dotnet restore
+dotnet run
+```
+
+Acesse **http://localhost:5000**. O site estático é servido da pasta configurada no projeto (ex.: **SiteUni** ou **SiteAxiom**).
+
+**Primeiro administrador:** acesse **http://localhost:5000/setup** e crie o primeiro usuário (será administrador). Depois use **/login**.
 
 ## Formulário de contato
 
-- A página **contato.html** (ou **http://localhost:5000/contato.html**) contém o formulário estilizado.
-- Campos obrigatórios: Nome, Telefone, E-mail, Mensagem. Assunto é opcional.
-- O envio é feito por POST para **/contato** e os dados são salvos na tabela **contatos** do MySQL.
+- Os dados são gravados na tabela **contatos** no PostgreSQL.
 
-## Rotas
+## Rotas (resumo)
 
 | Rota | Descrição |
 |------|-----------|
-| / | Redireciona para /eventos |
-| /contato.html | Página de contato do site (formulário) |
-| /contato | POST recebe o formulário de contato |
-| /login | Login (admin ou usuário) |
+| /api/health/db | Testa conexão com PostgreSQL (JSON) |
+| / | Redireciona conforme `Program.cs` |
+| /contato | POST do formulário de contato |
+| /login | Login |
 | /logout | Sair |
 | /setup | Criar primeiro admin (só se não existir usuário) |
-| /registro | Criar conta (usuário comum) |
-| /eventos | Lista de eventos; usuário logado pode se inscrever |
-| /blog | Lista de artigos (só leitura) |
 | /admin | Área do administrador |
 | /admin/eventos | Criar evento |
 | /admin/blog | Criar artigo |

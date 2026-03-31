@@ -1,130 +1,81 @@
-# Guia simples – MySQL e criar o admin
+# Guia simples – PostgreSQL (Docker) e criar o admin
 
-Você vai fazer **só 3 coisas**: (1) rodar um arquivo no MySQL, (2) rodar o programa no computador, (3) criar o admin no navegador. **Não precisa criar o banco na mão** nem adicionar usuário admin pelo MySQL.
-
----
-
-## Onde está cada coisa
-
-| O que | Onde está no seu PC |
-|-------|----------------------|
-| Arquivo do banco (tabelas) | `C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\Schema.sql` |
-| Programa (Backend) | Pasta: `C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend` |
-
-No **Explorador de Arquivos** do Windows:
-1. Abra **Documentos** → **OneDrive** → **TreinamentosSite**.
-2. Entre na pasta **Backend**.
-3. O arquivo que você vai abrir no MySQL é o **Schema.sql** (ícone de folha/script).
+Você vai fazer **só 3 coisas**: (1) subir o banco PostgreSQL e rodar o **Schema.sql**, (2) rodar o programa no computador, (3) criar o admin no navegador. **Não precisa** criar usuário de banco na mão se usar o Docker Compose do projeto — usuário **`admin`** e senha **`123456789`** já estão definidos.
 
 ---
 
-## PARTE 1 – Rodar o Schema no MySQL (só uma vez)
+## Credenciais padrão do PostgreSQL (este projeto)
 
-Isso **cria o banco** `axiomcode` e **todas as tabelas**. Se o banco já existir, não quebra nada.
+| Campo    | Valor        |
+|----------|--------------|
+| Usuário  | `admin`      |
+| Senha    | `123456789`  |
+| Banco    | `axiomcode`  |
+| Porta    | `5432`       |
+| Host     | `localhost`  |
 
-### Se você usa **MySQL Workbench**
-
-1. Abra o **MySQL Workbench** e conecte no seu servidor (clique na conexão que você usa, geralmente “Local” ou “localhost”).
-2. No menu: **File** → **Open SQL Script** (ou **Abrir script SQL**).
-3. Navegue até:
-   ```
-   C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend
-   ```
-4. Selecione o arquivo **Schema.sql** e clique em **Abrir**.
-5. O script vai aparecer na tela. Clique no **ícone do raio** (Execute) ou use **Ctrl+Shift+Enter**.
-6. Espere rodar. No final deve aparecer algo como “X rows affected” ou mensagem de sucesso. Pronto.
-
-### Se você usa **HeidiSQL** ou outro programa
-
-1. Conecte no MySQL.
-2. Procure a opção de **abrir arquivo SQL** ou **executar script**.
-3. Abra o arquivo:
-   ```
-   C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\Schema.sql
-   ```
-4. Execute o script todo. Pronto.
-
-Depois disso você **não precisa criar o banco de novo** no app do MySQL. O próprio script já cria o banco `axiomcode` e as tabelas.
+A connection string do backend é a mesma ideia (veja **README.md** e variável **AXIOM_DB**).
 
 ---
 
-## PARTE 2 – Rodar o programa (Backend)
+## PARTE 1 – Subir o PostgreSQL com Docker (só uma vez)
 
-1. Abra o **PowerShell** ou o **Prompt de Comando** (CMD).
-2. Digite e aperte Enter (uma linha por vez):
+1. Instale o [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows).
+2. Abra um terminal na pasta do projeto (onde está o arquivo **`docker-compose.yml`**).
+3. Execute:
    ```bash
-   cd C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend
+   docker compose up -d
+   ```
+4. Crie as tabelas executando o script **`Backend\Schema.sql`** no banco **`axiomcode`**:
+   - **Com `psql` instalado** (Cliente PostgreSQL):
+     ```bash
+     psql "postgresql://admin:123456789@localhost:5432/axiomcode" -f Backend/Schema.sql
+     ```
+   - **Com DBeaver / pgAdmin / outra ferramenta:** conecte com usuário `admin`, senha `123456789`, banco `axiomcode`, e execute o arquivo `Schema.sql`.
+
+> Sem Docker: instale PostgreSQL, crie o banco `axiomcode` e um usuário (pode ser `admin` / `123456789`), depois rode o mesmo `Schema.sql`.
+
+---
+
+## PARTE 2 – Rodar o backend
+
+1. Abra o PowerShell ou CMD e vá até a pasta **Backend**:
+   ```bash
+   cd caminho\para\DesenvolvimentoWeb\Backend
    dotnet run
    ```
-3. Espere até aparecer uma caixa com as linhas:
-   ```text
-   ========================================
-   AxiomCode - Servidor iniciado!
-   ========================================
-   Abra o navegador e acesse:
-     http://localhost:5000
-   ...
-   ```
-4. **Deixe essa janela aberta** (se fechar, o site para).
+2. Quando o servidor estiver em **http://localhost:5000**, siga para a Parte 3.
 
-**Se não aparecer nenhuma mensagem com "localhost":**
-- Tente abrir o navegador mesmo assim e digite: **http://localhost:5000**
-- Se a janela do PowerShell/CMD fechar sozinha logo após rodar `dotnet run`, provavelmente deu erro. Rode de novo e **leia o que aparecer em vermelho** (a mensagem de erro). Anote e peça ajuda com essa mensagem.
-- Confira se você está na pasta certa: `C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend` antes de rodar `dotnet run`.
-
-Se der erro de “senha” ou “conexão”, veja a seção **“Se der erro de conexão”** no final.
+Se der erro de conexão com o banco, confira se o container está rodando (`docker compose ps`) e se a porta **5432** está livre.
 
 ---
 
-## PARTE 3 – Criar o admin (pelo navegador)
+## PARTE 3 – Criar o usuário administrador do site
 
-O admin **não se cria no MySQL**. Você cria **no site**, numa página especial.
+O admin **não** se cria dentro do PostgreSQL com SQL manual para o dia a dia. Você usa uma página do site:
 
-1. Abra o **navegador** (Chrome, Edge, etc.).
-2. Na barra de endereço digite **exatamente**:
-   ```text
-   http://localhost:5000/setup
-   ```
-   (Se o programa mostrou outra porta, troque o 5000 por ela.)
-3. Vai abrir uma página **“Criar primeiro administrador”**.
-4. Preencha:
-   - **Nome de usuário:** o que você quiser para logar (ex.: `admin`).
-   - **Senha:** a senha que você quiser para o admin.
-5. Clique em **“Criar admin”**.
-6. Você será levado para a tela de **Login**. Use o **mesmo nome** e **mesma senha** que acabou de criar.
-7. Depois do login, você cai na **área do administrador** (/admin).
+1. No navegador, acesse: **http://localhost:5000/setup**
+2. Informe **nome de usuário** e **senha** e confirme para criar o **primeiro** administrador.
 
-Só isso. Esse usuário **já é o admin**; não precisa adicionar nada no MySQL.
+Só isso. Esse usuário **já é o admin** do sistema (campo `eh_admin` no PostgreSQL).
 
 ---
 
-## Resumindo
+## Resumo rápido
 
 | Passo | O que fazer |
 |-------|-------------|
-| 1 | No app do MySQL: abrir e **executar** o arquivo `Backend\Schema.sql` (cria o banco e tabelas). |
-| 2 | No PC: abrir terminal, ir na pasta `Backend` e rodar `dotnet run`. |
-| 3 | No navegador: abrir `http://localhost:5000/setup` e **criar o usuário e senha do admin**. |
-| 4 | Fazer **login** com esse usuário e senha → você está como admin. |
-
-Você **não** precisa:
-- Criar o banco de novo no app do MySQL (o Schema.sql já faz isso).
-- Adicionar o usuário admin no MySQL (você adiciona na página /setup do site).
+| 1 | `docker compose up -d` e executar `Backend/Schema.sql` no banco `axiomcode` |
+| 2 | `dotnet run` na pasta **Backend** |
+| 3 | Abrir **http://localhost:5000/setup** e criar o primeiro admin |
 
 ---
 
-## Se der erro de conexão com o MySQL
+## Se der erro de conexão com o PostgreSQL
 
-Se ao rodar `dotnet run` aparecer erro de “cannot connect” ou “access denied”:
-
-1. Lembre da **senha** que você usa para entrar no MySQL (no Workbench ou outro app).
-2. No PowerShell, **antes** de rodar `dotnet run`, digite (trocando `SUA_SENHA` pela senha real):
+1. Confirme usuário **`admin`**, senha **`123456789`**, banco **`axiomcode`**, host **`localhost`**, porta **`5432`**.
+2. Ajuste a variável **AXIOM_DB** se usar outra senha ou host, por exemplo:
    ```powershell
-   $env:AXIOM_DB = "Server=localhost;Database=axiomcode;User=root;Password=SUA_SENHA"
+   $env:AXIOM_DB = "Host=localhost;Port=5432;Database=axiomcode;Username=admin;Password=123456789"
    ```
-3. Depois rode de novo:
-   ```powershell
-   dotnet run
-   ```
-
-Se ainda der erro, diga qual app do MySQL você usa (Workbench, XAMPP, etc.) e qual mensagem aparece, que a gente ajusta o próximo passo.
+3. No Docker, veja os logs: `docker compose logs postgres`.

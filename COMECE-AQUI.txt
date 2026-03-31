@@ -1,38 +1,38 @@
 AXIOMCODE - POR ONDE COMEÇAR
 ============================
 
-1. ONDE ESTÁ O ARQUIVO DO BANCO (MySQL)?
-   Pasta: TreinamentosSite \ Backend
+1. ONDE ESTÁ O ARQUIVO DO BANCO (PostgreSQL)?
+   Pasta: DesenvolvimentoWeb \ Backend
    Arquivo: Schema.sql
 
-   Caminho completo no seu PC:
-   C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend\Schema.sql
+   O banco usado pelo projeto é PostgreSQL. Credenciais padrão do projeto:
+   - Usuario: admin
+   - Senha:  123456789
+   - Banco:  axiomcode
+   - Porta:  5432
 
 
-2. O QUE FAZER NO APP DO MYSQL?
-   - Abra o MySQL Workbench (ou o app que você usa).
-   - Conecte no servidor.
-   - Menu: File → Open SQL Script.
-   - Vá na pasta Backend e abra o arquivo Schema.sql.
-   - Clique no ícone do raio (Execute) para rodar o script.
-   Pronto. O banco "axiomcode" e as tabelas são criados ali. Não precisa criar o banco na mão.
+2. SUBIR O POSTGRESQL (Docker - recomendado)
+   Na pasta onde está docker-compose.yml:
+      docker compose up -d
+
+   Depois crie as tabelas (com psql ou pgAdmin / DBeaver), conectando em:
+      postgresql://admin:123456789@localhost:5432/axiomcode
+   e executando o arquivo Backend\Schema.sql
 
 
-3. COMO CRIAR O USUÁRIO ADMIN?
-   NÃO é no MySQL. É no navegador, depois de rodar o programa:
+3. COMO CRIAR O USUÁRIO ADMIN DO SITE?
+   NÃO é no PostgreSQL à mão no dia a dia. É no navegador, depois de rodar o programa:
 
-   a) Abra o PowerShell ou CMD e digite:
-      cd C:\Users\gisla\OneDrive\Documentos\TreinamentosSite\Backend
+   a) PowerShell ou CMD:
+      cd ...\DesenvolvimentoWeb\Backend
       dotnet run
 
-   b) Quando aparecer a mensagem "AxiomCode - Servidor iniciado!" e "http://localhost:5000", abra o navegador.
-      (Se não aparecer nada, tente abrir o navegador mesmo assim e digite: http://localhost:5000)
-
-   c) Digite na barra de endereço:
+   b) Quando o servidor estiver em http://localhost:5000, abra o navegador em:
       http://localhost:5000/setup
 
-   d) Na página que abrir, coloque um nome de usuário e uma senha e clique em "Criar admin".
-   Esse usuário JÁ É o administrador. Depois faça login em http://localhost:5000/login com esse nome e senha.
+   c) Na página, coloque nome de usuário e senha e crie o primeiro administrador.
+      Depois faça login em http://localhost:5000/login
 
 
 GUIA COMPLETO (passo a passo detalhado):
