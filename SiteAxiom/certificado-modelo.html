@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Modelo visual — Certificado AxiomCode</title>
+    <meta name="robots" content="noindex">
+    <!-- Referência de estilo (cores da home). O PDF é gerado em C# com QuestPDF seguindo esta paleta. -->
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background-image: linear-gradient(#050538, #000000);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+        .certificado {
+            width: 100%;
+            max-width: 900px;
+            background: #040227;
+            border: 1.5px solid #e2e3ed;
+            border-radius: 14px;
+            padding: 40px 48px;
+            color: #f2f1f5;
+            box-shadow: 0 0 24px rgba(147, 112, 219, 0.25);
+        }
+        .certificado h1 {
+            text-align: center;
+            font-size: 1.85rem;
+            color: #fff;
+            margin: 0 0 8px;
+        }
+        .marca {
+            text-align: center;
+            font-size: 0.9rem;
+            font-style: italic;
+            color: #c8c8e8;
+            margin-bottom: 24px;
+        }
+        .corpo {
+            text-align: center;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+        .corpo strong { color: #fff; font-size: 1.15em; }
+        .evento-titulo {
+            display: block;
+            margin-top: 12px;
+            font-size: 1.35rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        .data {
+            margin-top: 16px;
+            color: #e2e3ed;
+        }
+        .rodape {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 0.8rem;
+            color: #9393c4;
+        }
+    </style>
+</head>
+<body>
+    <article class="certificado">
+        <h1>Certificado de participação</h1>
+        <p class="marca">AxiomCode</p>
+        <p class="corpo">
+            Certificamos que <strong>Nome do participante</strong> concluiu a participação no evento
+            <span class="evento-titulo">Título do evento</span>
+        </p>
+        <p class="data">Data do evento: 01/04/2026</p>
+        <p class="rodape">— Comunidade AxiomCode —</p>
+    </article>
+</body>
+</html>

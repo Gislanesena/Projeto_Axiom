@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Npgsql;
 using System.Globalization;
 using System.Net;
@@ -5,6 +6,8 @@ using System.Net.Mail;
 using System.Text;
 using System.Text.Json;
 using System.Security.Cryptography;
+using AxiomCode;
+using QuestPDF.Infrastructure;
 
 // ============== CONFIGURAÇÃO ==============
 var connectionString = Environment.GetEnvironmentVariable("AXIOM_DB")
@@ -13,6 +16,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
 builder.Services.AddAntiforgery();
 var app = builder.Build();
+
+QuestPDF.Settings.License = LicenseType.Community;
+
+// Cache do PDF gerado após inscrição (regera no GET se não houver entrada, p.ex. após reinício)
+var certificadoPdfCache = new ConcurrentDictionary<string, byte[]>();
 
 // Páginas restritas antes dos arquivos estáticos
 app.Use(async (context, next) =>
@@ -365,7 +373,8 @@ app.MapPost("/contato", async (HttpRequest req) =>
     return Results.Redirect("/contato.html?ok=1");
 });
 
-async Task RegistrarInscricaoComEmailAsync(int usuarioId, int eventoId)
+/// <returns><c>true</c> se a inscrição foi criada agora; <c>false</c> se já existia.</returns>
+async Task<bool> RegistrarInscricaoComEmailAsync(int usuarioId, int eventoId)
 {
     await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
@@ -374,7 +383,7 @@ async Task RegistrarInscricaoComEmailAsync(int usuarioId, int eventoId)
     ins.Parameters.AddWithValue("e", eventoId);
     ins.Parameters.AddWithValue("u", usuarioId);
     var rows = await ins.ExecuteNonQueryAsync();
-    if (rows == 0) return;
+    if (rows == 0) return false;
 
     string? emailUser = null;
     var nomeUser = "";
@@ -390,18 +399,76 @@ async Task RegistrarInscricaoComEmailAsync(int usuarioId, int eventoId)
         }
     }
 
+    var eventoEncontrado = false;
+    var tituloEvento = "";
+    DateOnly dataEv = default;
+    TimeOnly horaEv = default;
+    var enderecoEv = "";
     await using (var eq = new NpgsqlCommand("SELECT titulo, data_evento, horario, endereco FROM eventos WHERE id = @id", conn))
     {
         eq.Parameters.AddWithValue("id", eventoId);
-        await using var er = await eq.ExecuteReaderAsync();
-        if (await er.ReadAsync())
+        await using (var er = await eq.ExecuteReaderAsync())
         {
-            var tit = er.GetString(0);
-            var d = DateOnly.FromDateTime(er.GetDateTime(1));
-            var h = TimeOnly.FromTimeSpan(er.GetTimeSpan(2));
-            var end = er.GetString(3);
-            await EnviarEmailConfirmacaoInscricaoAsync(emailUser, nomeUser, tit, d, h, end);
+            if (await er.ReadAsync())
+            {
+                eventoEncontrado = true;
+                tituloEvento = er.GetString(0);
+                dataEv = DateOnly.FromDateTime(er.GetDateTime(1));
+                horaEv = TimeOnly.FromTimeSpan(er.GetTimeSpan(2));
+                enderecoEv = er.GetString(3);
+            }
         }
+    }
+
+    if (!eventoEncontrado)
+    {
+        // Evento inexistente (ex.: removido): remove inscrição órfã
+        await using var rev = new NpgsqlCommand(
+            "DELETE FROM inscricoes_eventos WHERE evento_id = @e AND usuario_id = @u", conn);
+        rev.Parameters.AddWithValue("e", eventoId);
+        rev.Parameters.AddWithValue("u", usuarioId);
+        await rev.ExecuteNonQueryAsync();
+        return false;
+    }
+
+    await EnviarEmailConfirmacaoInscricaoAsync(emailUser, nomeUser, tituloEvento, dataEv, horaEv, enderecoEv);
+    return true;
+}
+
+async Task<(string nomeUsuario, string titulo, DateOnly data)?> ObterDadosCertificadoAsync(int usuarioId, int eventoId)
+{
+    await using var conn = new NpgsqlConnection(connectionString);
+    await conn.OpenAsync();
+    await using var cmd = new NpgsqlCommand("""
+        SELECT u.nome_usuario, e.titulo, e.data_evento
+        FROM inscricoes_eventos i
+        INNER JOIN usuarios u ON u.id = i.usuario_id
+        INNER JOIN eventos e ON e.id = i.evento_id
+        WHERE i.usuario_id = @u AND i.evento_id = @e
+        LIMIT 1
+        """, conn);
+    cmd.Parameters.AddWithValue("u", usuarioId);
+    cmd.Parameters.AddWithValue("e", eventoId);
+    await using var r = await cmd.ExecuteReaderAsync();
+    if (!await r.ReadAsync())
+        return null;
+    var dataDt = r.GetDateTime(2);
+    return (r.GetString(0), r.GetString(1), DateOnly.FromDateTime(dataDt));
+}
+
+async Task PosInscricaoGerarCertificadoAsync(int usuarioId, int eventoId)
+{
+    var dados = await ObterDadosCertificadoAsync(usuarioId, eventoId);
+    if (dados == null) return;
+    try
+    {
+        var pdf = CertificadoPdf.Gerar(dados.Value.nomeUsuario, dados.Value.titulo, dados.Value.data);
+        certificadoPdfCache[$"{usuarioId}_{eventoId}"] = pdf;
+    }
+    catch (Exception ex)
+    {
+        // Inscrição já está salva; o GET do certificado pode gerar o PDF depois
+        Console.WriteLine($"[Certificado PDF cache] {ex.Message}");
     }
 }
 
@@ -444,12 +511,17 @@ app.MapPost("/eventos/inscrever", async (HttpContext ctx, HttpRequest req) =>
     try
     {
         await RegistrarInscricaoComEmailAsync(userId.Value, eventoId);
+        var dados = await ObterDadosCertificadoAsync(userId.Value, eventoId);
+        if (dados == null)
+            return Results.Redirect("/eventos.html?erro_inscricao=1");
+        await PosInscricaoGerarCertificadoAsync(userId.Value, eventoId);
+        return Results.Redirect("/eventos.html?inscrito=1");
     }
     catch (Exception ex)
     {
         Console.WriteLine($"[Inscrição] Erro: {ex.Message}");
+        return Results.Redirect("/eventos.html?erro_inscricao=1");
     }
-    return Results.Redirect("/eventos.html?inscrito=1");
 });
 
 app.MapPost("/eventos/inscrever-por-titulo", async (HttpRequest req) =>
@@ -476,12 +548,17 @@ app.MapPost("/eventos/inscrever-por-titulo", async (HttpRequest req) =>
     try
     {
         await RegistrarInscricaoComEmailAsync(userId.Value, eventoId);
+        var dados = await ObterDadosCertificadoAsync(userId.Value, eventoId);
+        if (dados == null)
+            return Results.Redirect("/dashboard.html?erro_inscricao=1");
+        await PosInscricaoGerarCertificadoAsync(userId.Value, eventoId);
+        return Results.Redirect("/dashboard.html?inscrito=1");
     }
     catch (Exception ex)
     {
         Console.WriteLine($"[Inscrição] Erro: {ex.Message}");
+        return Results.Redirect("/dashboard.html?erro_inscricao=1");
     }
-    return Results.Redirect("/dashboard.html?inscrito=1");
 });
 
 app.MapGet("/meus-eventos", (HttpRequest req) =>
@@ -725,13 +802,29 @@ app.MapGet("/api/auth/me", async (HttpRequest req) =>
     return Results.Json(new { loggedIn = true, isAdmin, nomeUsuario = nome ?? "" });
 });
 
-app.MapGet("/api/public/eventos", async () =>
+app.MapGet("/api/public/eventos", async (HttpRequest req) =>
 {
+    var (uid, _) = LerUsuarioCookie(req);
     await using var conn = new NpgsqlConnection(connectionString);
     await conn.OpenAsync();
     var lista = new List<Dictionary<string, string>>();
     await using var cmd = new NpgsqlCommand(
-        "SELECT id, titulo, data_evento, horario, endereco, COALESCE(descricao,''), COALESCE(foto_url,'') FROM eventos ORDER BY data_evento, horario", conn);
+        uid.HasValue
+            ? """
+              SELECT e.id, e.titulo, e.data_evento, e.horario, e.endereco, COALESCE(e.descricao,''), COALESCE(e.foto_url,''),
+                     EXISTS (SELECT 1 FROM inscricoes_eventos i WHERE i.evento_id = e.id AND i.usuario_id = @u)
+              FROM eventos e
+              ORDER BY e.data_evento, e.horario
+              """
+            : """
+              SELECT e.id, e.titulo, e.data_evento, e.horario, e.endereco, COALESCE(e.descricao,''), COALESCE(e.foto_url,''),
+                     FALSE
+              FROM eventos e
+              ORDER BY e.data_evento, e.horario
+              """,
+        conn);
+    if (uid.HasValue)
+        cmd.Parameters.AddWithValue("u", uid.Value);
     await using var r = await cmd.ExecuteReaderAsync();
     while (await r.ReadAsync())
     {
@@ -745,7 +838,8 @@ app.MapGet("/api/public/eventos", async () =>
             ["horario"] = hora.ToString(@"hh\:mm"),
             ["endereco"] = r.GetString(4),
             ["descricao"] = r.GetString(5),
-            ["fotoUrl"] = r.GetString(6)
+            ["fotoUrl"] = r.GetString(6),
+            ["inscrito"] = r.GetBoolean(7) ? "true" : "false"
         });
     }
     return Results.Json(new { ok = true, eventos = lista });
@@ -839,13 +933,61 @@ app.MapPost("/api/eventos/inscrever", async (HttpRequest req) =>
     try
     {
         await RegistrarInscricaoComEmailAsync(userId.Value, eventoId);
-        return Results.Json(new { ok = true });
+        var dadosCert = await ObterDadosCertificadoAsync(userId.Value, eventoId);
+        if (dadosCert == null)
+            return Results.Json(new { ok = false, error = "Evento inválido ou inscrição não encontrada" }, statusCode: 400);
+
+        byte[] pdf;
+        try
+        {
+            pdf = CertificadoPdf.Gerar(dadosCert.Value.nomeUsuario, dadosCert.Value.titulo, dadosCert.Value.data);
+        }
+        catch (Exception genEx)
+        {
+            Console.WriteLine($"[Certificado PDF] {genEx.Message}");
+            return Results.Json(new { ok = false, error = "Não foi possível gerar o certificado. Tente novamente." }, statusCode: 500);
+        }
+
+        certificadoPdfCache[$"{userId.Value}_{eventoId}"] = pdf;
+
+        return Results.Json(new
+        {
+            ok = true,
+            certificadoUrl = $"/api/eventos/{eventoId}/certificado"
+        });
     }
     catch (Exception ex)
     {
         Console.WriteLine($"[API Inscrição] {ex.Message}");
         return Results.Json(new { ok = false, error = "Não foi possível concluir a inscrição" }, statusCode: 400);
     }
+});
+
+app.MapGet("/api/eventos/{eventoId:int}/certificado", async (int eventoId, HttpRequest req) =>
+{
+    var (userId, _) = LerUsuarioCookie(req);
+    if (!userId.HasValue)
+        return Results.Json(new { ok = false, error = "Faça login para baixar o certificado" }, statusCode: 401);
+
+    var cacheKey = $"{userId.Value}_{eventoId}";
+    if (!certificadoPdfCache.TryGetValue(cacheKey, out var pdf))
+    {
+        var dados = await ObterDadosCertificadoAsync(userId.Value, eventoId);
+        if (dados == null)
+            return Results.Json(new { ok = false, error = "Inscrição não encontrada para este evento" }, statusCode: 404);
+        try
+        {
+            pdf = CertificadoPdf.Gerar(dados.Value.nomeUsuario, dados.Value.titulo, dados.Value.data);
+            certificadoPdfCache[cacheKey] = pdf;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Certificado PDF] {ex.Message}");
+            return Results.Json(new { ok = false, error = "Falha ao gerar o certificado" }, statusCode: 500);
+        }
+    }
+
+    return Results.File(pdf, "application/pdf", $"certificado-axiomcode-evento-{eventoId}.pdf");
 });
 
 app.MapPost("/api/auth/registro", async (HttpRequest req) =>

@@ -48,7 +48,7 @@ main {
 }
 
 
-button {
+.carrossel button {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -63,7 +63,7 @@ button {
     transition: background-color 400ms ease-in-out;
 }
 
-button:hover{
+.carrossel button:hover{
     background-color: #0808bd;
     
 }
@@ -369,6 +369,95 @@ hr {
     border-radius: 8px;
     color: #f0c8c8;
     text-align: center;
+}
+
+.eventos-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+    margin: 24px 0 60px;
+}
+
+.evento-card {
+    border: 1px solid rgba(226, 227, 237, 0.35);
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #07074f3b;
+}
+
+.evento-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.evento-corpo {
+    padding: 18px 20px 22px;
+}
+
+.evento-card h3 {
+    margin-top: 0;
+    text-align: left;
+    color: #f2f1f5;
+}
+
+.evento-meta,
+.evento-desc {
+    text-align: left;
+    font-size: 17px;
+    margin-top: 8px;
+    color: #e8e8f0;
+}
+
+.evento-botoes {
+    margin-top: 16px;
+}
+
+.evento-acoes {
+    text-align: left;
+    font-size: 17px;
+    margin-top: 8px;
+}
+
+.evento-acoes a {
+    color: #c8c8e8;
+}
+
+.btn-inscrever {
+    position: static;
+    transform: none;
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #15044d93;
+    color: #f2f1f5;
+    border: solid 1px rgba(204, 204, 204, 0.5);
+    box-shadow: none;
+}
+
+.btn-inscrever:hover {
+    box-shadow: 0 0 15px rgba(230, 230, 250, 0.5), 0 0 25px rgba(147, 112, 219, 0.35);
+    background-color: #1a065aad;
+}
+
+.btn-certificado {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 10px;
+    background-color: rgba(21, 4, 77, 0.58);
+    color: #f2f1f5;
+    border: solid 1px rgba(226, 227, 237, 0.45);
+    text-decoration: none;
+    transition: box-shadow 0.3s ease;
+}
+
+.btn-certificado:hover {
+    box-shadow: 0 0 15px rgba(230, 230, 250, 0.5), 0 0 25px rgba(147, 112, 219, 0.35);
 }
 
 footer {
