@@ -25,5 +25,5 @@ O Projeto AxiomCode tem como príncipio fornecer aos calouros de tecnologia um a
 ## 🚀 Como rodar o projeto
 
 ```bash
-git clone seu-repo
+git clone (https://github.com/Gislanesena/Projeto_Axiom.git)
 cd projeto
